@@ -187,82 +187,44 @@ const LEVELS = [
   { threshold: 1000, zh: '半两大空头', en: 'Legendary' },
 ];
 
-// 新闻数据
-const NEWS_POOL = [
-  { 
-    id: 1, tag: '宏观', tagEn: 'Macro', 
-    title: '美联储维持利率不变', titleEn: 'Fed Holds Rates Steady', 
-    body: '鲍威尔暗示年内降息，市场情绪乐观。', bodyEn: 'Powell hints at rate cuts later this year.', 
-    impact: 'positive',
-    source: '路透社', sourceEn: 'Reuters',
-    date: '2024-03-20', dateEn: '2024-03-20',
-    fullContent: '美国联邦储备委员会在3月会议上决定将联邦基金利率目标区间维持在5.25%-5.5%不变，符合市场预期。美联储主席鲍威尔在新闻发布会上表示，通胀已显著放缓，劳动力市场依然强劲，如果经济保持当前路径，年内降息可能是合适的。这一表态推动美股三大指数全线走高，标普500指数创历史新高。',
-    fullContentEn: 'The Federal Reserve kept its benchmark interest rate unchanged at 5.25%-5.5% in March, as widely expected. Chair Powell said at a press conference that inflation has eased notably and the labor market remains strong. If the economy evolves as projected, rate cuts later this year could be appropriate.'
-  },
-  { 
-    id: 2, tag: '科技', tagEn: 'Tech', 
-    title: 'NVIDIA 发布新架构', titleEn: 'NVIDIA Announces New Architecture', 
-    body: 'AI芯片需求激增，供应链利润翻倍。', bodyEn: 'AI chip demand surges, supply chain profits double.', 
-    impact: 'positive',
-    source: '彭博社', sourceEn: 'Bloomberg',
-    date: '2024-03-18', dateEn: '2024-03-18',
-    fullContent: 'NVIDIA在GTC大会上正式发布下一代AI芯片架构"Blackwell"，性能较上一代提升数倍。公司CEO黄仁勋表示，Blackwell平台将推动生成式AI进一步普及，目前订单已排至2025年。',
-    fullContentEn: 'NVIDIA unveiled its next-generation AI chip architecture "Blackwell" at GTC, delivering several times the performance of previous generation. CEO Jensen Huang said the Blackwell platform will further democratize generative AI.'
-  },
-  { 
-    id: 3, tag: '亚洲', tagEn: 'Asia', 
-    title: '东京通胀超预期', titleEn: 'Tokyo Inflation Exceeds Expectations', 
-    body: '日元汇率波动加剧，出口企业承压。', bodyEn: 'Yen volatility increases, exporters under pressure.', 
-    impact: 'warning',
-    source: '日经新闻', sourceEn: 'Nikkei',
-    date: '2024-03-22', dateEn: '2024-03-22',
-    fullContent: '日本总务省公布数据显示，东京3月核心CPI同比上涨2.8%，高于预期的2.6%，连续23个月高于央行2%目标。市场对日本央行进一步加息的预期升温，日元兑美元短线跳涨。',
-    fullContentEn: 'Core CPI in Tokyo rose 2.8% in March, exceeding forecasts of 2.6%, marking the 23rd consecutive month above the BOJ\'s 2% target. Expectations for further rate hikes intensified.'
-  },
-  { 
-    id: 4, tag: '突发', tagEn: 'Flash', 
-    title: '半两分析师：注意回调', titleEn: 'Analyst: Correction Ahead', 
-    body: '当前市场杠杆率过高，建议适当止盈。', bodyEn: 'High leverage in the market, consider taking profits.', 
-    impact: 'neutral',
-    source: '半两研究院', sourceEn: 'Banliang Research',
-    date: '2024-03-23', dateEn: '2024-03-23',
-    fullContent: '半两研究院发布报告指出，当前美股市场融资余额达到历史高位，散户杠杆比例上升，短期回调风险加大。建议投资者适当降低仓位，锁定部分利润。',
-    fullContentEn: 'Banliang Research noted that margin debt in the US stock market is near record highs, retail leverage has increased, and short-term correction risks are rising. Investors are advised to reduce positions moderately.'
-  }
+// -------------------- 扩展新闻数据（几百条 + 配图）--------------------
+const NEWS_TEMPLATES = [
+  { tag: '宏观', tagEn: 'Macro', impact: 'positive', titles: ['美联储维持利率不变', '非农数据超预期', '通胀持续降温', 'GDP增速上调', '消费信心回升'] },
+  { tag: '科技', tagEn: 'Tech', impact: 'positive', titles: ['英伟达发布新架构', '苹果WWDC召开', 'AI芯片需求爆发', '微软云收入增长', '谷歌布局量子计算'] },
+  { tag: '亚洲', tagEn: 'Asia', impact: 'warning', titles: ['日元汇率波动加剧', '恒指技术性回调', '中国经济数据公布', '韩股外资流出', '东南亚市场震荡'] },
+  { tag: '突发', tagEn: 'Flash', impact: 'neutral', titles: ['半两分析师提示风险', '地缘政治影响市场', '大宗商品价格异动', '交易所技术故障', '财报季拉开帷幕'] },
 ];
 
-// 生成模拟K线数据
-const generateCandlestickData = (basePrice: number, points: number, volatility: number = 0.01) => {
-  const data = [];
-  let currentPrice = basePrice;
-  for (let i = 0; i < points; i++) {
-    const open = currentPrice;
-    const change = (Math.random() - 0.5) * volatility;
-    const close = open * (1 + change);
-    const high = Math.max(open, close) * (1 + Math.random() * 0.005);
-    const low = Math.min(open, close) * (1 - Math.random() * 0.005);
-    data.push({
-      time: i,
-      open,
-      high,
-      low,
-      close,
+const generateLargeNewsPool = (count: number) => {
+  const pool = [];
+  const startDate = new Date('2024-01-01');
+  for (let i = 1; i <= count; i++) {
+    const template = NEWS_TEMPLATES[i % NEWS_TEMPLATES.length];
+    const titleIndex = i % template.titles.length;
+    const date = new Date(startDate);
+    date.setDate(startDate.getDate() + Math.floor(i / 5));
+    pool.push({
+      id: i,
+      tag: template.tag,
+      tagEn: template.tagEn,
+      title: `${template.titles[titleIndex]}${i > 200 ? '（更新）' : ''}`,
+      titleEn: template.titles[titleIndex],
+      body: '相关内容摘要，更多细节请点击查看。',
+      bodyEn: 'Summary content, click for details.',
+      impact: template.impact,
+      source: ['路透社', '彭博社', 'CNBC', '半两研究院'][i % 4],
+      sourceEn: ['Reuters', 'Bloomberg', 'CNBC', 'Banliang'][i % 4],
+      date: date.toISOString().split('T')[0],
+      dateEn: date.toISOString().split('T')[0],
+      fullContent: `详细内容：${template.titles[titleIndex]}。这是一段模拟的新闻全文，展示更多信息。`,
+      fullContentEn: `Full content: ${template.titles[titleIndex]}. This is simulated news content.`,
+      imageUrl: `https://picsum.photos/id/${(i % 100) + 1}/400/200`,
     });
-    currentPrice = close;
   }
-  return data;
+  return pool;
 };
 
-const getCurrentLevel = (exp: number, lang: Language) => {
-  const level = LEVELS.filter(l => l.threshold <= exp).slice(-1)[0];
-  return lang === 'zh' ? level.zh : level.en;
-};
-
-const filterAssets = (assets: typeof ASSETS, search: string) => {
-  if (!search.trim()) return assets;
-  const lower = search.toLowerCase();
-  return assets.filter(a => a.id.toLowerCase().includes(lower) || a.name.toLowerCase().includes(lower));
-};
+const INITIAL_NEWS_POOL = generateLargeNewsPool(300); // 300条新闻
 
 interface TradeRecord {
   id: string;
@@ -280,7 +242,7 @@ export default function Home() {
   const t = (key: keyof typeof translations.zh) => (translations[lang] as any)[key] || key;
 
   // 核心状态
-  const [balance, setBalance] = useState(100000);
+  const [balance, setBalance] = useState(1000000); // 修改为100万美金
   const [shares, setShares] = useState<Record<string, number>>({});
   const [prices, setPrices] = useState(ASSETS);
   const [activeId, setActiveId] = useState('SPY');
@@ -294,47 +256,121 @@ export default function Home() {
   const [currentPage, setCurrentPage] = useState<'home' | 'login' | 'payment'>('home');
   const [user, setUser] = useState<{ username: string; wechatBound: boolean } | null>(null);
 
-  // 图表相关
+  // 图表相关（不再使用 chartRange 动态更新数据）
   const [chartRange, setChartRange] = useState<'1m' | '10m' | '1h' | '1d' | '1mo' | '1y'>('1d');
   const activeAsset = useMemo(() => prices.find(p => p.id === activeId) || ASSETS[0], [prices, activeId]);
 
-  const chartData = useMemo(() => {
-    let points = 50;
-    switch (chartRange) {
-      case '1m': points = 1; break;
-      case '10m': points = 10; break;
-      case '1h': points = 60; break;
-      case '1d': points = 1440; break;
-      case '1mo': points = 43200; break;
-      case '1y': points = 525600; break;
+  // 静态K线数据生成（基于股票初始价格，固定不变）
+  const generateStaticCandlestickData = (basePrice: number, points: number = 100) => {
+    const data = [];
+    let currentPrice = basePrice;
+    for (let i = 0; i < points; i++) {
+      const open = currentPrice;
+      const change = (Math.random() - 0.5) * 0.015;
+      const close = open * (1 + change);
+      const high = Math.max(open, close) * (1 + Math.random() * 0.008);
+      const low = Math.min(open, close) * (1 - Math.random() * 0.008);
+      data.push({
+        time: i + 1,
+        open,
+        high,
+        low,
+        close,
+      });
+      currentPrice = close;
     }
-    const maxPoints = 100;
-    return generateCandlestickData(activeAsset.price, Math.min(points, maxPoints), 0.01);
-  }, [activeAsset.price, chartRange]);
+    return data;
+  };
+
+  const [staticChartData, setStaticChartData] = useState<any[]>([]);
+
+  // 当切换股票时，重新生成静态K线数据
+  useEffect(() => {
+    const newData = generateStaticCandlestickData(activeAsset.price);
+    setStaticChartData(newData);
+  }, [activeAsset.id]); // 仅在股票id变化时更新
 
   const [searchTerm, setSearchTerm] = useState('');
-  const filteredAssets = useMemo(() => filterAssets(prices, searchTerm), [prices, searchTerm]);
+  const filteredAssets = useMemo(() => {
+    if (!searchTerm.trim()) return prices;
+    const lower = searchTerm.toLowerCase();
+    return prices.filter(a => a.id.toLowerCase().includes(lower) || a.name.toLowerCase().includes(lower));
+  }, [prices, searchTerm]);
 
+  // 新闻相关：使用动态状态以便添加每日更新
+  const [allNews, setAllNews] = useState(INITIAL_NEWS_POOL);
   const [newsSearchTerm, setNewsSearchTerm] = useState('');
   const filteredNews = useMemo(() => {
-    if (!newsSearchTerm.trim()) return NEWS_POOL;
+    if (!newsSearchTerm.trim()) return allNews;
     const term = newsSearchTerm.toLowerCase();
-    return NEWS_POOL.filter(n => 
+    return allNews.filter(n => 
       (lang === 'zh' ? n.title : n.titleEn).toLowerCase().includes(term) ||
       (lang === 'zh' ? n.body : n.bodyEn).toLowerCase().includes(term)
     );
-  }, [newsSearchTerm, lang]);
+  }, [newsSearchTerm, lang, allNews]);
+
+  // 分页加载
+  const [newsPage, setNewsPage] = useState(1);
+  const NEWS_PER_PAGE = 12;
+  const paginatedNews = useMemo(() => {
+    return filteredNews.slice(0, newsPage * NEWS_PER_PAGE);
+  }, [filteredNews, newsPage]);
+
+  // 滚动加载更多
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && paginatedNews.length < filteredNews.length) {
+          setNewsPage(prev => prev + 1);
+        }
+      },
+      { threshold: 0.5 }
+    );
+    if (loadMoreRef.current) observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [paginatedNews.length, filteredNews.length]);
+
+  // 每日更新新闻（模拟）
+  useEffect(() => {
+    const addDailyNews = () => {
+      const todayStr = new Date().toDateString();
+      const lastUpdate = localStorage.getItem('lastNewsUpdate');
+      if (lastUpdate !== todayStr) {
+        const newNews = {
+          id: Date.now(),
+          tag: '最新',
+          tagEn: 'Latest',
+          title: `半两早报 ${new Date().toLocaleDateString()}`,
+          titleEn: `Banliang Morning Brief ${new Date().toLocaleDateString()}`,
+          body: '今日市场动态摘要：美联储官员讲话、科技股财报前瞻等。',
+          bodyEn: "Today's market update: Fed speeches, tech earnings preview.",
+          impact: 'neutral',
+          source: '半两研究院',
+          sourceEn: 'Banliang Research',
+          date: new Date().toISOString().split('T')[0],
+          dateEn: new Date().toISOString().split('T')[0],
+          fullContent: '详细内容：半两研究院每日市场前瞻，包含重要经济数据、公司事件及技术分析。',
+          fullContentEn: 'Full content: Banliang Research daily market preview, including key economic data, corporate events, and technical analysis.',
+          imageUrl: `https://picsum.photos/id/20/400/200`,
+        };
+        setAllNews(prev => [newNews, ...prev]);
+        localStorage.setItem('lastNewsUpdate', todayStr);
+      }
+    };
+    addDailyNews();
+  }, []);
 
   const [tradeHistory, setTradeHistory] = useState<TradeRecord[]>([]);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [selectedNews, setSelectedNews] = useState<typeof NEWS_POOL[0] | null>(null);
+  const [selectedNews, setSelectedNews] = useState<any>(null);
 
   // K线图引用
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<any>(null);
   const seriesRef = useRef<any>(null);
 
-  // 定时更新价格
+  // 定时更新价格（不影响图表）
   useEffect(() => {
     const timer = setInterval(() => {
       setPrices(prev => prev.map(a => ({
@@ -452,6 +488,12 @@ export default function Home() {
     setCurrentPage('home');
   };
 
+  // 获取当前等级名称
+  const getCurrentLevel = (exp: number, lang: Language) => {
+    const level = LEVELS.filter(l => l.threshold <= exp).slice(-1)[0];
+    return lang === 'zh' ? level.zh : level.en;
+  };
+
   // -------------------- K线图初始化 --------------------
   useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -495,10 +537,10 @@ export default function Home() {
     };
   }, [isDark]);
 
-  // 更新图表数据
+  // 更新图表数据（使用静态数据）
   useEffect(() => {
-    if (seriesRef.current && chartData.length) {
-      const formattedData = chartData.map((item, idx) => ({
+    if (seriesRef.current && staticChartData.length) {
+      const formattedData = staticChartData.map((item, idx) => ({
         time: idx + 1,
         open: item.open,
         high: item.high,
@@ -508,7 +550,7 @@ export default function Home() {
       seriesRef.current.setData(formattedData);
       chartRef.current?.timeScale().fitContent();
     }
-  }, [chartData]);
+  }, [staticChartData]);
 
   // -------------------- 渲染函数 --------------------
   const renderLoginPage = () => (
@@ -689,7 +731,7 @@ export default function Home() {
                     </button>
                   ))}
                 </div>
-                </div>
+              </div>
               <div ref={chartContainerRef} style={{ width: '100%', height: 300 }} />
               <p className="text-xs text-center text-gray-400 mt-2">提示：鼠标滚轮缩放，拖拽查看历史K线</p>
             </div>
@@ -770,12 +812,20 @@ export default function Home() {
           </div>
           <p className="text-[10px] font-black opacity-40 uppercase mb-4">{t('intelligence')}</p>
           <div className="space-y-4">
-            {filteredNews.map(n => (
+            {paginatedNews.map(n => (
               <div
                 key={n.id}
                 onClick={() => setSelectedNews(n)}
                 className={`p-4 rounded-2xl border cursor-pointer transition-all hover:scale-[1.02] ${isDark ? 'bg-[#2C3A2C] border-[#4A5A4A] hover:bg-[#3A4A3A]' : 'bg-white/90 border-[#E8E3D9] hover:bg-white'}`}
               >
+                {n.imageUrl && (
+                  <img
+                    src={n.imageUrl}
+                    alt="news"
+                    className="w-full h-28 object-cover rounded-lg mb-3"
+                    onError={(e) => (e.currentTarget.style.display = 'none')}
+                  />
+                )}
                 <div className="flex justify-between items-start mb-2">
                   <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md ${n.impact === 'positive' ? 'bg-[#8BAA6E]/20 text-[#8BAA6E]' : n.impact === 'warning' ? 'bg-red-500/20 text-red-500' : 'bg-gray-400/20 text-gray-500'}`}>
                     {lang === 'zh' ? n.tag : n.tagEn}
@@ -786,6 +836,12 @@ export default function Home() {
                 <p className="text-xs opacity-70 mt-1 line-clamp-2">{lang === 'zh' ? n.body : n.bodyEn}</p>
               </div>
             ))}
+            {/* 加载更多触发器 */}
+            <div ref={loadMoreRef} className="h-10 flex justify-center items-center">
+              {paginatedNews.length < filteredNews.length && (
+                <span className="text-xs text-gray-400">加载更多...</span>
+              )}
+            </div>
           </div>
         </aside>
       </div>
@@ -896,6 +952,9 @@ export default function Home() {
               <span>{lang === 'zh' ? selectedNews.source : selectedNews.sourceEn}</span>
               <span>{lang === 'zh' ? selectedNews.date : selectedNews.dateEn}</span>
             </div>
+            {selectedNews.imageUrl && (
+              <img src={selectedNews.imageUrl} alt="" className="w-full h-48 object-cover rounded-lg mb-4" />
+            )}
             <p className="text-sm leading-relaxed whitespace-pre-line">
               {lang === 'zh' ? selectedNews.fullContent : selectedNews.fullContentEn}
             </p>
