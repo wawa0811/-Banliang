@@ -1,25 +1,28 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0c0c0c;
-  --foreground: #f5f5f4;
-  --muted: #18181b;
-  --muted-foreground: #a1a1aa;
-  --accent: #d4a574;
-  --accent-foreground: #0c0c0c;
-  --border: #27272a;
-  --ring: #52525b;
-  --primary: #f5f5f4;
-  --primary-foreground: #0c0c0c;
-  --secondary: #1c1c1f;
-  --secondary-foreground: #f5f5f4;
-  --success: #10b981;
-  --danger: #ef4444;
+  /* Cream/Off-White Theme */
+  --background: #faf8f5;
+  --foreground: #1c1917;
+  --card: #f5f3f0;
+  --muted: #e7e5e4;
+  --muted-foreground: #78716c;
+  --accent: #92400e;
+  --accent-foreground: #faf8f5;
+  --border: #d6d3d1;
+  --ring: #a8a29e;
+  --primary: #1c1917;
+  --primary-foreground: #faf8f5;
+  --secondary: #f0ede8;
+  --secondary-foreground: #1c1917;
+  --success: #166534;
+  --danger: #991b1b;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
@@ -34,7 +37,7 @@
   --color-danger: var(--danger);
   --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, monospace;
-  --font-serif: var(--font-playfair), Georgia, serif;
+  --font-serif: var(--font-playfair), 'Times New Roman', Georgia, serif;
 }
 
 * {
@@ -51,7 +54,29 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
-/* Custom scrollbar */
+/* Chinese Font - Shanghai Song style fallback */
+.font-cn {
+  font-family: 'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', 'SimSun', 'STSong', serif;
+}
+
+/* Paper texture background */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.4;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  z-index: 0;
+  mix-blend-mode: multiply;
+}
+
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Custom scrollbar for light theme */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -77,8 +102,8 @@ button, a, input, [role="button"] {
 
 /* Text selection */
 ::selection {
-  background: var(--primary);
-  color: var(--primary-foreground);
+  background: var(--foreground);
+  color: var(--background);
 }
 
 /* Animation keyframes */
@@ -146,7 +171,7 @@ button, a, input, [role="button"] {
 }
 
 .animate-pulse-slow {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation: pulse 2s cubic-bezier(0.4, 0.6, 0.1) infinite;
 }
 
 /* Staggered animation delays */
@@ -188,7 +213,7 @@ button, a, input, [role="button"] {
   content: '';
   position: absolute;
   inset: 0;
-  background: var(--primary);
+  background: var(--foreground);
   transform: scaleX(0);
   transform-origin: right;
   transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
@@ -206,7 +231,7 @@ button, a, input, [role="button"] {
 }
 
 .magnetic-btn:hover span {
-  color: var(--primary-foreground);
+  color: var(--background);
 }
 
 /* Line animation */
@@ -221,7 +246,7 @@ button, a, input, [role="button"] {
   left: 0;
   width: 100%;
   height: 1px;
-  background: var(--primary);
+  background: var(--foreground);
   transform: scaleX(0);
   transform-origin: right;
   transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -232,9 +257,9 @@ button, a, input, [role="button"] {
   transform-origin: left;
 }
 
-/* Glassmorphism */
+/* Glassmorphism for light theme */
 .glass {
-  background: rgba(10, 10, 10, 0.8);
+  background: rgba(250, 248, 245, 0.8);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
@@ -285,26 +310,6 @@ button, a, input, [role="button"] {
   animation: textReveal 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 
-/* Cursor follower effect */
-.cursor-follower {
-  position: fixed;
-  width: 20px;
-  height: 20px;
-  border: 1px solid var(--primary);
-  border-radius: 50%;
-  pointer-events: none;
-  transition: transform 0.15s ease-out, width 0.3s, height 0.3s;
-  z-index: 9999;
-  mix-blend-mode: difference;
-}
-
-.cursor-follower.hover {
-  width: 60px;
-  height: 60px;
-  background: var(--primary);
-  opacity: 0.2;
-}
-
 /* Smooth link underline */
 .link-underline {
   position: relative;
@@ -318,7 +323,7 @@ button, a, input, [role="button"] {
   left: 0;
   width: 100%;
   height: 1px;
-  background: var(--primary);
+  background: var(--foreground);
   transform: scaleX(0);
   transform-origin: right;
   transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -360,19 +365,9 @@ button, a, input, [role="button"] {
 .stagger-fade > *:nth-child(7) { animation-delay: 0.7s; }
 .stagger-fade > *:nth-child(8) { animation-delay: 0.8s; }
 
-/* Noise texture overlay */
-.noise-overlay {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.03;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-  z-index: 100;
-}
-
-/* Chart container dark styling */
+/* Chart container styling for light theme */
 .tv-lightweight-charts {
-  background: var(--background) !important;
+  background: var(--card) !important;
 }
 
 /* Hide scrollbar but keep functionality */
@@ -382,5 +377,10 @@ button, a, input, [role="button"] {
 }
 
 .hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Remove noise overlay for light theme */
+.noise-overlay {
   display: none;
 }
