@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createChart, CrosshairMode, CandlestickSeries } from 'lightweight-charts';
+import { motion, AnimatePresence, useInView, useScroll, useTransform } from 'framer-motion';
 
-// -------------------- 多语言配置 --------------------
+// -------------------- Multi-language Config --------------------
 type Language = 'zh' | 'en';
 const translations = {
   zh: {
@@ -53,7 +54,7 @@ const translations = {
     visa: 'Visa',
     pay: '立即支付',
     paySuccess: '支付成功，感谢支持！',
-    priceChart: '价格走势（K线图）',
+    priceChart: '价格走势',
     '1m': '1分钟',
     '10m': '10分钟',
     '1h': '1小时',
@@ -125,12 +126,12 @@ const translations = {
     visa: 'Visa',
     pay: 'Pay Now',
     paySuccess: 'Payment successful!',
-    priceChart: 'Price Chart (Candlestick)',
+    priceChart: 'Price Chart',
     '1m': '1m',
     '10m': '10m',
     '1h': '1h',
     '1d': '1d',
-    '1mo': '1m',
+    '1mo': '1mo',
     '1y': '1y',
     searchStock: 'Search symbol or name',
     searchNews: 'Search news...',
@@ -152,32 +153,32 @@ const translations = {
   }
 };
 
-// -------------------- 资产数据（15只股票）--------------------
+// -------------------- Asset Data --------------------
 const ASSETS = [
-  { id: 'SPY', name: 'S&P 500', zone: '北美', price: 512.45, color: 'bg-[#557AFF]' },
-  { id: 'QQQ', name: 'Nasdaq 100', zone: '北美', price: 445.2, color: 'bg-[#A355FF]' },
-  { id: 'AAPL', name: 'Apple Inc.', zone: '北美', price: 175.30, color: 'bg-[#557AFF]' },
-  { id: 'MSFT', name: 'Microsoft', zone: '北美', price: 420.80, color: 'bg-[#557AFF]' },
-  { id: 'GOOGL', name: 'Alphabet', zone: '北美', price: 150.25, color: 'bg-[#557AFF]' },
-  { id: 'TSLA', name: 'Tesla', zone: '北美', price: 175.60, color: 'bg-[#557AFF]' },
-  { id: 'HSI', name: 'Hang Seng', zone: '亚洲', price: 16500, color: 'bg-[#FF5555]' },
-  { id: 'N225', name: 'Nikkei 225', zone: '亚洲', price: 38500, color: 'bg-[#FFB355]' },
-  { id: 'SSE', name: 'Shanghai Comp', zone: '亚洲', price: 3100, color: 'bg-[#FF5555]' },
-  { id: 'DAX', name: 'DAX', zone: '欧洲', price: 17850, color: 'bg-[#55C2FF]' },
-  { id: 'UKX', name: 'FTSE 100', zone: '欧洲', price: 7900, color: 'bg-[#55C2FF]' },
-  { id: 'CAC', name: 'CAC 40', zone: '欧洲', price: 7600, color: 'bg-[#55C2FF]' },
-  { id: 'BABA', name: 'Alibaba', zone: '亚洲', price: 75.40, color: 'bg-[#FF5555]' },
-  { id: 'NVDA', name: 'NVIDIA', zone: '北美', price: 900.10, color: 'bg-[#557AFF]' },
-  { id: 'AMD', name: 'AMD', zone: '北美', price: 150.20, color: 'bg-[#557AFF]' },
+  { id: 'SPY', name: 'S&P 500', zone: 'NA', price: 512.45, color: 'bg-primary' },
+  { id: 'QQQ', name: 'Nasdaq 100', zone: 'NA', price: 445.2, color: 'bg-primary' },
+  { id: 'AAPL', name: 'Apple Inc.', zone: 'NA', price: 175.30, color: 'bg-primary' },
+  { id: 'MSFT', name: 'Microsoft', zone: 'NA', price: 420.80, color: 'bg-primary' },
+  { id: 'GOOGL', name: 'Alphabet', zone: 'NA', price: 150.25, color: 'bg-primary' },
+  { id: 'TSLA', name: 'Tesla', zone: 'NA', price: 175.60, color: 'bg-primary' },
+  { id: 'HSI', name: 'Hang Seng', zone: 'ASIA', price: 16500, color: 'bg-danger' },
+  { id: 'N225', name: 'Nikkei 225', zone: 'ASIA', price: 38500, color: 'bg-danger' },
+  { id: 'SSE', name: 'Shanghai Comp', zone: 'ASIA', price: 3100, color: 'bg-danger' },
+  { id: 'DAX', name: 'DAX', zone: 'EU', price: 17850, color: 'bg-success' },
+  { id: 'UKX', name: 'FTSE 100', zone: 'EU', price: 7900, color: 'bg-success' },
+  { id: 'CAC', name: 'CAC 40', zone: 'EU', price: 7600, color: 'bg-success' },
+  { id: 'BABA', name: 'Alibaba', zone: 'ASIA', price: 75.40, color: 'bg-danger' },
+  { id: 'NVDA', name: 'NVIDIA', zone: 'NA', price: 900.10, color: 'bg-primary' },
+  { id: 'AMD', name: 'AMD', zone: 'NA', price: 150.20, color: 'bg-primary' },
 ];
 
 const FOOD_COLLECTION = [
-  { icon: '🍵', name: '翠玉抹茶', desc: '心平气和，方能看透红绿', color: 'bg-[#E8F5E9]' },
-  { icon: '🍇', name: '多肉葡萄', desc: '丰收时刻，持仓大吉', color: 'bg-[#F3E5F5]' },
-  { icon: '🥐', name: '巧克力可颂', desc: '外酥里嫩，盈利爆浆', color: 'bg-[#FFF3E0]' },
-  { icon: '🍓', name: '芝芝莓莓', desc: '甜美收益，生活微甜', color: 'bg-[#FFEBEE]' },
-  { icon: '🥑', name: '能量牛油果', desc: '健康持仓，长线是金', color: 'bg-[#F1F8E9]' },
-  { icon: '🍰', name: '云朵千层', desc: '轻盈获利，拒绝焦虑', color: 'bg-[#FCE4EC]' }
+  { icon: '01', name: 'Matcha', desc: 'Stay calm to see through the red and green', color: 'bg-secondary' },
+  { icon: '02', name: 'Grape', desc: 'Harvest time, hold for luck', color: 'bg-secondary' },
+  { icon: '03', name: 'Croissant', desc: 'Crispy outside, profit inside', color: 'bg-secondary' },
+  { icon: '04', name: 'Berry', desc: 'Sweet returns, sweet life', color: 'bg-secondary' },
+  { icon: '05', name: 'Avocado', desc: 'Healthy position, long term gold', color: 'bg-secondary' },
+  { icon: '06', name: 'Layer Cake', desc: 'Light profits, no anxiety', color: 'bg-secondary' }
 ];
 
 const LEVELS = [
@@ -187,12 +188,12 @@ const LEVELS = [
   { threshold: 1000, zh: '半两大空头', en: 'Legendary' },
 ];
 
-// -------------------- 扩展新闻数据（几百条 + 配图）--------------------
+// -------------------- News Data --------------------
 const NEWS_TEMPLATES = [
-  { tag: '宏观', tagEn: 'Macro', impact: 'positive', titles: ['美联储维持利率不变', '非农数据超预期', '通胀持续降温', 'GDP增速上调', '消费信心回升'] },
-  { tag: '科技', tagEn: 'Tech', impact: 'positive', titles: ['英伟达发布新架构', '苹果WWDC召开', 'AI芯片需求爆发', '微软云收入增长', '谷歌布局量子计算'] },
-  { tag: '亚洲', tagEn: 'Asia', impact: 'warning', titles: ['日元汇率波动加剧', '恒指技术性回调', '中国经济数据公布', '韩股外资流出', '东南亚市场震荡'] },
-  { tag: '突发', tagEn: 'Flash', impact: 'neutral', titles: ['半两分析师提示风险', '地缘政治影响市场', '大宗商品价格异动', '交易所技术故障', '财报季拉开帷幕'] },
+  { tag: '宏观', tagEn: 'Macro', impact: 'positive', titles: ['Fed Holds Rates Steady', 'Non-Farm Data Beats', 'Inflation Cools', 'GDP Revised Up', 'Consumer Confidence Rises'] },
+  { tag: '科技', tagEn: 'Tech', impact: 'positive', titles: ['NVIDIA New Architecture', 'Apple WWDC', 'AI Chip Demand Surges', 'Microsoft Cloud Growth', 'Google Quantum Push'] },
+  { tag: '亚洲', tagEn: 'Asia', impact: 'warning', titles: ['Yen Volatility Spikes', 'HSI Technical Pullback', 'China Data Release', 'Korean Outflows', 'SEA Markets Choppy'] },
+  { tag: '突发', tagEn: 'Flash', impact: 'neutral', titles: ['Analyst Risk Alert', 'Geopolitical Impact', 'Commodity Price Move', 'Exchange Tech Issue', 'Earnings Season Begins'] },
 ];
 
 const generateLargeNewsPool = (count: number) => {
@@ -207,16 +208,16 @@ const generateLargeNewsPool = (count: number) => {
       id: i,
       tag: template.tag,
       tagEn: template.tagEn,
-      title: `${template.titles[titleIndex]}${i > 200 ? '（更新）' : ''}`,
+      title: `${template.titles[titleIndex]}${i > 200 ? ' (Updated)' : ''}`,
       titleEn: template.titles[titleIndex],
-      body: '相关内容摘要，更多细节请点击查看。',
+      body: 'Related content summary, click for more details.',
       bodyEn: 'Summary content, click for details.',
       impact: template.impact,
-      source: ['路透社', '彭博社', 'CNBC', '半两研究院'][i % 4],
+      source: ['Reuters', 'Bloomberg', 'CNBC', 'Banliang'][i % 4],
       sourceEn: ['Reuters', 'Bloomberg', 'CNBC', 'Banliang'][i % 4],
       date: date.toISOString().split('T')[0],
       dateEn: date.toISOString().split('T')[0],
-      fullContent: `详细内容：${template.titles[titleIndex]}。这是一段模拟的新闻全文，展示更多信息。`,
+      fullContent: `Full content: ${template.titles[titleIndex]}. This is simulated detailed news content.`,
       fullContentEn: `Full content: ${template.titles[titleIndex]}. This is simulated news content.`,
       imageUrl: `https://picsum.photos/id/${(i % 100) + 1}/400/200`,
     });
@@ -224,7 +225,7 @@ const generateLargeNewsPool = (count: number) => {
   return pool;
 };
 
-const INITIAL_NEWS_POOL = generateLargeNewsPool(300); // 300条新闻
+const INITIAL_NEWS_POOL = generateLargeNewsPool(300);
 
 interface TradeRecord {
   id: string;
@@ -237,30 +238,219 @@ interface TradeRecord {
   dateStr: string;
 }
 
-export default function Home() {
-  const [lang, setLang] = useState<Language>('zh');
-  const t = (key: keyof typeof translations.zh) => (translations[lang] as any)[key] || key;
+// Animation Variants
+const fadeInUp = {
+  hidden: { opacity: 0, y: 60 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }
+  }
+};
 
-  // 核心状态
-  const [balance, setBalance] = useState(1000000); // 修改为100万美金
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1, delayChildren: 0.2 }
+  }
+};
+
+const slideInLeft = {
+  hidden: { opacity: 0, x: -60 },
+  visible: { 
+    opacity: 1, 
+    x: 0,
+    transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }
+  }
+};
+
+const scaleIn = {
+  hidden: { opacity: 0, scale: 0.9 },
+  visible: { 
+    opacity: 1, 
+    scale: 1,
+    transition: { duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }
+  }
+};
+
+const letterAnimation = {
+  hidden: { opacity: 0, y: 50 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      delay: i * 0.03,
+      ease: [0.25, 0.46, 0.45, 0.94]
+    }
+  })
+};
+
+// Animated Text Component
+function AnimatedText({ text, className }: { text: string; className?: string }) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
+  
+  return (
+    <motion.span
+      ref={ref}
+      className={`inline-block ${className}`}
+      initial="hidden"
+      animate={isInView ? "visible" : "hidden"}
+    >
+      {text.split('').map((char, i) => (
+        <motion.span
+          key={i}
+          custom={i}
+          variants={letterAnimation}
+          className="inline-block"
+          style={{ display: char === ' ' ? 'inline' : 'inline-block' }}
+        >
+          {char === ' ' ? '\u00A0' : char}
+        </motion.span>
+      ))}
+    </motion.span>
+  );
+}
+
+// Magnetic Button Component
+function MagneticButton({ 
+  children, 
+  onClick, 
+  className = '',
+  variant = 'primary'
+}: { 
+  children: React.ReactNode; 
+  onClick?: () => void;
+  className?: string;
+  variant?: 'primary' | 'secondary' | 'outline';
+}) {
+  const ref = useRef<HTMLButtonElement>(null);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    setPosition({ x: x * 0.3, y: y * 0.3 });
+  };
+
+  const handleMouseLeave = () => {
+    setPosition({ x: 0, y: 0 });
+  };
+
+  const baseStyles = "relative overflow-hidden font-medium tracking-wide uppercase text-xs";
+  const variantStyles = {
+    primary: "bg-primary text-primary-foreground px-8 py-4",
+    secondary: "bg-secondary text-secondary-foreground px-6 py-3",
+    outline: "border border-border px-6 py-3 hover:bg-primary hover:text-primary-foreground hover:border-primary"
+  };
+
+  return (
+    <motion.button
+      ref={ref}
+      onClick={onClick}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      animate={{ x: position.x, y: position.y }}
+      transition={{ type: "spring", stiffness: 150, damping: 15 }}
+      className={`${baseStyles} ${variantStyles[variant]} ${className}`}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+    >
+      <motion.span
+        className="absolute inset-0 bg-accent"
+        initial={{ scaleX: 0 }}
+        whileHover={{ scaleX: 1 }}
+        transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+        style={{ transformOrigin: 'left' }}
+      />
+      <span className="relative z-10">{children}</span>
+    </motion.button>
+  );
+}
+
+// Hover Reveal Image Component
+function HoverRevealItem({ 
+  children, 
+  imageUrl, 
+  onClick,
+  isActive
+}: { 
+  children: React.ReactNode; 
+  imageUrl?: string;
+  onClick?: () => void;
+  isActive?: boolean;
+}) {
+  const [isHovered, setIsHovered] = useState(false);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    setMousePosition({ x: e.clientX, y: e.clientY });
+  };
+
+  return (
+    <motion.div
+      onClick={onClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onMouseMove={handleMouseMove}
+      className={`relative cursor-pointer py-4 border-b border-border group ${isActive ? 'bg-secondary' : ''}`}
+      whileHover={{ x: 20 }}
+      transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+    >
+      {children}
+      
+      <AnimatePresence>
+        {isHovered && imageUrl && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.3 }}
+            className="fixed pointer-events-none z-50 w-64 h-40 overflow-hidden"
+            style={{ 
+              left: mousePosition.x + 20, 
+              top: mousePosition.y - 80,
+            }}
+          >
+            <img 
+              src={imageUrl} 
+              alt="" 
+              className="w-full h-full object-cover grayscale"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
+export default function Home() {
+  const [lang, setLang] = useState<Language>('en');
+  const t = (key: keyof typeof translations.zh) => (translations[lang] as Record<string, string>)[key] || key;
+
+  // Core State
+  const [balance, setBalance] = useState(1000000);
   const [shares, setShares] = useState<Record<string, number>>({});
   const [prices, setPrices] = useState(ASSETS);
   const [activeId, setActiveId] = useState('SPY');
   const [amt, setAmt] = useState('');
-  const [isDark, setIsDark] = useState(false);
   const [exp, setExp] = useState(0);
   const [unlockedFoods, setUnlockedFoods] = useState<typeof FOOD_COLLECTION>([]);
   const [currentProgress, setCurrentProgress] = useState(0);
 
-  // 页面路由
+  // Page Routing
   const [currentPage, setCurrentPage] = useState<'home' | 'login' | 'payment'>('home');
   const [user, setUser] = useState<{ username: string; wechatBound: boolean } | null>(null);
 
-  // 图表相关（不再使用 chartRange 动态更新数据）
+  // Chart Related
   const [chartRange, setChartRange] = useState<'1m' | '10m' | '1h' | '1d' | '1mo' | '1y'>('1d');
   const activeAsset = useMemo(() => prices.find(p => p.id === activeId) || ASSETS[0], [prices, activeId]);
 
-  // 静态K线数据生成（基于股票初始价格，固定不变）
+  // Static Candlestick Data
   const generateStaticCandlestickData = (basePrice: number, points: number = 100) => {
     const data = [];
     let currentPrice = basePrice;
@@ -270,25 +460,18 @@ export default function Home() {
       const close = open * (1 + change);
       const high = Math.max(open, close) * (1 + Math.random() * 0.008);
       const low = Math.min(open, close) * (1 - Math.random() * 0.008);
-      data.push({
-        time: i + 1,
-        open,
-        high,
-        low,
-        close,
-      });
+      data.push({ time: i + 1, open, high, low, close });
       currentPrice = close;
     }
     return data;
   };
 
-  const [staticChartData, setStaticChartData] = useState<any[]>([]);
+  const [staticChartData, setStaticChartData] = useState<ReturnType<typeof generateStaticCandlestickData>>([]);
 
-  // 当切换股票时，重新生成静态K线数据
   useEffect(() => {
     const newData = generateStaticCandlestickData(activeAsset.price);
     setStaticChartData(newData);
-  }, [activeAsset.id]); // 仅在股票id变化时更新
+  }, [activeAsset.id]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const filteredAssets = useMemo(() => {
@@ -297,7 +480,7 @@ export default function Home() {
     return prices.filter(a => a.id.toLowerCase().includes(lower) || a.name.toLowerCase().includes(lower));
   }, [prices, searchTerm]);
 
-  // 新闻相关：使用动态状态以便添加每日更新
+  // News Related
   const [allNews, setAllNews] = useState(INITIAL_NEWS_POOL);
   const [newsSearchTerm, setNewsSearchTerm] = useState('');
   const filteredNews = useMemo(() => {
@@ -309,14 +492,14 @@ export default function Home() {
     );
   }, [newsSearchTerm, lang, allNews]);
 
-  // 分页加载
+  // Pagination
   const [newsPage, setNewsPage] = useState(1);
-  const NEWS_PER_PAGE = 12;
+  const NEWS_PER_PAGE = 8;
   const paginatedNews = useMemo(() => {
     return filteredNews.slice(0, newsPage * NEWS_PER_PAGE);
   }, [filteredNews, newsPage]);
 
-  // 滚动加载更多
+  // Scroll Load More
   const loadMoreRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -331,46 +514,16 @@ export default function Home() {
     return () => observer.disconnect();
   }, [paginatedNews.length, filteredNews.length]);
 
-  // 每日更新新闻（模拟）
-  useEffect(() => {
-    const addDailyNews = () => {
-      const todayStr = new Date().toDateString();
-      const lastUpdate = localStorage.getItem('lastNewsUpdate');
-      if (lastUpdate !== todayStr) {
-        const newNews = {
-          id: Date.now(),
-          tag: '最新',
-          tagEn: 'Latest',
-          title: `半两早报 ${new Date().toLocaleDateString()}`,
-          titleEn: `Banliang Morning Brief ${new Date().toLocaleDateString()}`,
-          body: '今日市场动态摘要：美联储官员讲话、科技股财报前瞻等。',
-          bodyEn: "Today's market update: Fed speeches, tech earnings preview.",
-          impact: 'neutral',
-          source: '半两研究院',
-          sourceEn: 'Banliang Research',
-          date: new Date().toISOString().split('T')[0],
-          dateEn: new Date().toISOString().split('T')[0],
-          fullContent: '详细内容：半两研究院每日市场前瞻，包含重要经济数据、公司事件及技术分析。',
-          fullContentEn: 'Full content: Banliang Research daily market preview, including key economic data, corporate events, and technical analysis.',
-          imageUrl: `https://picsum.photos/id/20/400/200`,
-        };
-        setAllNews(prev => [newNews, ...prev]);
-        localStorage.setItem('lastNewsUpdate', todayStr);
-      }
-    };
-    addDailyNews();
-  }, []);
-
   const [tradeHistory, setTradeHistory] = useState<TradeRecord[]>([]);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [selectedNews, setSelectedNews] = useState<any>(null);
+  const [selectedNews, setSelectedNews] = useState<typeof INITIAL_NEWS_POOL[0] | null>(null);
 
-  // K线图引用
+  // Chart Refs
   const chartContainerRef = useRef<HTMLDivElement>(null);
-  const chartRef = useRef<any>(null);
-  const seriesRef = useRef<any>(null);
+  const chartRef = useRef<ReturnType<typeof createChart> | null>(null);
+  const seriesRef = useRef<ReturnType<ReturnType<typeof createChart>['addSeries']> | null>(null);
 
-  // 定时更新价格（不影响图表）
+  // Price Updates
   useEffect(() => {
     const timer = setInterval(() => {
       setPrices(prev => prev.map(a => ({
@@ -458,7 +611,7 @@ export default function Home() {
 
   const handlePayment = () => {
     if (!user) {
-      alert('请先登录');
+      alert('Please login first');
       setCurrentPage('login');
       return;
     }
@@ -475,52 +628,51 @@ export default function Home() {
       setUser({ username: loginForm.username, wechatBound: false });
       setCurrentPage('home');
     } else {
-      alert('请输入用户名和密码');
+      alert('Please enter username and password');
     }
   };
 
   const handleRegister = () => {
     if (registerForm.password !== registerForm.confirm) {
-      alert('密码不一致');
+      alert('Passwords do not match');
       return;
     }
     setUser({ username: registerForm.username, wechatBound: !!registerForm.wechat });
     setCurrentPage('home');
   };
 
-  // 获取当前等级名称
   const getCurrentLevel = (exp: number, lang: Language) => {
     const level = LEVELS.filter(l => l.threshold <= exp).slice(-1)[0];
     return lang === 'zh' ? level.zh : level.en;
   };
 
-  // -------------------- K线图初始化 --------------------
+  // Chart Initialization
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
     const chart = createChart(chartContainerRef.current, {
       width: chartContainerRef.current.clientWidth,
-      height: 300,
+      height: 350,
       layout: {
-        background: { color: isDark ? '#1E2A1E' : '#F9F7F2' },
-        textColor: isDark ? '#E8E3D9' : '#3A2C1F',
+        background: { color: '#0a0a0a' },
+        textColor: '#a1a1aa',
       },
       grid: {
-        vertLines: { color: isDark ? '#2C3A2C' : '#E8E3D9' },
-        horzLines: { color: isDark ? '#2C3A2C' : '#E8E3D9' },
+        vertLines: { color: '#27272a' },
+        horzLines: { color: '#27272a' },
       },
       crosshair: { mode: CrosshairMode.Normal },
-      rightPriceScale: { borderColor: isDark ? '#2C3A2C' : '#E8E3D9' },
-      timeScale: { borderColor: isDark ? '#2C3A2C' : '#E8E3D9', timeVisible: true, secondsVisible: false },
+      rightPriceScale: { borderColor: '#27272a' },
+      timeScale: { borderColor: '#27272a', timeVisible: true, secondsVisible: false },
     });
     chartRef.current = chart;
 
     const candlestickSeries = chart.addSeries(CandlestickSeries, {
-      upColor: '#26a69a',
-      downColor: '#ef5350',
+      upColor: '#22c55e',
+      downColor: '#ef4444',
       borderVisible: false,
-      wickUpColor: '#26a69a',
-      wickDownColor: '#ef5350',
+      wickUpColor: '#22c55e',
+      wickDownColor: '#ef4444',
     });
     seriesRef.current = candlestickSeries;
 
@@ -535,9 +687,8 @@ export default function Home() {
       window.removeEventListener('resize', handleResize);
       chart.remove();
     };
-  }, [isDark]);
+  }, []);
 
-  // 更新图表数据（使用静态数据）
   useEffect(() => {
     if (seriesRef.current && staticChartData.length) {
       const formattedData = staticChartData.map((item, idx) => ({
@@ -552,421 +703,726 @@ export default function Home() {
     }
   }, [staticChartData]);
 
-  // -------------------- 渲染函数 --------------------
+  // Scroll Progress
+  const { scrollYProgress } = useScroll();
+  const headerOpacity = useTransform(scrollYProgress, [0, 0.1], [1, 0.95]);
+
+  // Login Page
   const renderLoginPage = () => (
-    <div className="flex items-center justify-center min-h-screen bg-[#F9F7F2] dark:bg-[#1E2A1E]">
-      <div className="w-full max-w-md p-8 bg-white/90 dark:bg-[#2C3A2C] rounded-2xl shadow-xl">
-        <h2 className="text-2xl font-bold text-center mb-6">{isLogin ? t('login') : t('register')}</h2>
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="flex items-center justify-center min-h-screen bg-background"
+    >
+      <motion.div 
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+        className="w-full max-w-md p-12 border border-border"
+      >
+        <motion.h2 
+          className="text-4xl font-light tracking-tight text-center mb-12"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          {isLogin ? t('login') : t('register')}
+        </motion.h2>
+        
         {isLogin ? (
-          <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+          >
             <input
               type="text"
               placeholder={t('username')}
-              className="w-full p-3 mb-4 border rounded-lg dark:bg-[#3A4A3A] dark:border-[#4A5A4A]"
+              className="w-full p-4 mb-6 bg-transparent border-b border-border focus:border-primary outline-none transition-colors text-foreground placeholder:text-muted-foreground"
               value={loginForm.username}
               onChange={e => setLoginForm({ ...loginForm, username: e.target.value })}
             />
             <input
               type="password"
               placeholder={t('password')}
-              className="w-full p-3 mb-6 border rounded-lg dark:bg-[#3A4A3A] dark:border-[#4A5A4A]"
+              className="w-full p-4 mb-10 bg-transparent border-b border-border focus:border-primary outline-none transition-colors text-foreground placeholder:text-muted-foreground"
               value={loginForm.password}
               onChange={e => setLoginForm({ ...loginForm, password: e.target.value })}
             />
-            <button onClick={handleLogin} className="w-full py-3 bg-[#8BAA6E] text-white rounded-lg font-bold">{t('loginBtn')}</button>
-            <p className="text-center mt-4 text-sm">没有账号？ <button onClick={() => setIsLogin(false)} className="text-[#8BAA6E] underline">注册</button></p>
-          </>
+            <MagneticButton onClick={handleLogin} className="w-full">
+              {t('loginBtn')}
+            </MagneticButton>
+            <p className="text-center mt-8 text-sm text-muted-foreground">
+              {"Don't have an account?"}{' '}
+              <button onClick={() => setIsLogin(false)} className="text-primary underline underline-offset-4 hover:text-accent transition-colors">
+                {t('register')}
+              </button>
+            </p>
+          </motion.div>
         ) : (
-          <>
-            <input type="text" placeholder={t('username')} className="w-full p-3 mb-4 border rounded-lg" value={registerForm.username} onChange={e => setRegisterForm({ ...registerForm, username: e.target.value })} />
-            <input type="email" placeholder={t('email')} className="w-full p-3 mb-4 border rounded-lg" value={registerForm.email} onChange={e => setRegisterForm({ ...registerForm, email: e.target.value })} />
-            <input type="tel" placeholder={t('phone')} className="w-full p-3 mb-4 border rounded-lg" value={registerForm.phone} onChange={e => setRegisterForm({ ...registerForm, phone: e.target.value })} />
-            <input type="password" placeholder={t('password')} className="w-full p-3 mb-4 border rounded-lg" value={registerForm.password} onChange={e => setRegisterForm({ ...registerForm, password: e.target.value })} />
-            <input type="password" placeholder={t('confirmPassword')} className="w-full p-3 mb-4 border rounded-lg" value={registerForm.confirm} onChange={e => setRegisterForm({ ...registerForm, confirm: e.target.value })} />
-            <div className="flex items-center mb-4">
-              <span className="mr-2">{t('bindWechat')}</span>
-              <input type="text" placeholder={t('wechatPlaceholder')} className="flex-1 p-3 border rounded-lg" value={registerForm.wechat} onChange={e => setRegisterForm({ ...registerForm, wechat: e.target.value })} />
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="space-y-4"
+          >
+            <input type="text" placeholder={t('username')} className="w-full p-4 bg-transparent border-b border-border focus:border-primary outline-none transition-colors" value={registerForm.username} onChange={e => setRegisterForm({ ...registerForm, username: e.target.value })} />
+            <input type="email" placeholder={t('email')} className="w-full p-4 bg-transparent border-b border-border focus:border-primary outline-none transition-colors" value={registerForm.email} onChange={e => setRegisterForm({ ...registerForm, email: e.target.value })} />
+            <input type="tel" placeholder={t('phone')} className="w-full p-4 bg-transparent border-b border-border focus:border-primary outline-none transition-colors" value={registerForm.phone} onChange={e => setRegisterForm({ ...registerForm, phone: e.target.value })} />
+            <input type="password" placeholder={t('password')} className="w-full p-4 bg-transparent border-b border-border focus:border-primary outline-none transition-colors" value={registerForm.password} onChange={e => setRegisterForm({ ...registerForm, password: e.target.value })} />
+            <input type="password" placeholder={t('confirmPassword')} className="w-full p-4 bg-transparent border-b border-border focus:border-primary outline-none transition-colors" value={registerForm.confirm} onChange={e => setRegisterForm({ ...registerForm, confirm: e.target.value })} />
+            <div className="pt-6">
+              <MagneticButton onClick={handleRegister} className="w-full">
+                {t('registerBtn')}
+              </MagneticButton>
             </div>
-            <button onClick={handleRegister} className="w-full py-3 bg-[#8BAA6E] text-white rounded-lg font-bold">{t('registerBtn')}</button>
-            <p className="text-center mt-4 text-sm">已有账号？ <button onClick={() => setIsLogin(true)} className="text-[#8BAA6E] underline">登录</button></p>
-          </>
+            <p className="text-center pt-4 text-sm text-muted-foreground">
+              Already have an account?{' '}
+              <button onClick={() => setIsLogin(true)} className="text-primary underline underline-offset-4">
+                {t('login')}
+              </button>
+            </p>
+          </motion.div>
         )}
-      </div>
-    </div>
+        
+        <motion.button
+          onClick={() => setCurrentPage('home')}
+          className="w-full mt-6 py-3 text-muted-foreground text-sm hover:text-foreground transition-colors"
+          whileHover={{ x: -5 }}
+        >
+          &larr; Back to Trading
+        </motion.button>
+      </motion.div>
+    </motion.div>
   );
 
-  const renderPaymentPage = () => (
-    <div className="flex items-center justify-center min-h-screen bg-[#F9F7F2] dark:bg-[#1E2A1E]">
-      <div className="w-full max-w-md p-8 bg-white/90 dark:bg-[#2C3A2C] rounded-2xl shadow-xl">
-        <h2 className="text-2xl font-bold text-center mb-6">{t('selectDrink')}</h2>
-        <div className="space-y-4 mb-6">
-          {Object.entries(drinkNames).map(([key, name]) => (
-            <label key={key} className="flex items-center p-3 border rounded-lg cursor-pointer">
-              <input type="radio" name="drink" value={key} checked={selectedDrink === key} onChange={() => setSelectedDrink(key as any)} className="mr-3" />
-              <span className="flex-1">{name}</span>
-              <span>¥{drinkPrices[key as keyof typeof drinkPrices]}</span>
-            </label>
-          ))}
-        </div>
-        <div className="mb-6">
-          <p className="font-bold mb-2">{t('paymentMethod')}</p>
-          <div className="flex gap-4">
-            <button onClick={() => setPaymentMethod('wechat')} className={`flex-1 py-2 rounded-lg border ${paymentMethod === 'wechat' ? 'border-[#8BAA6E] bg-[#8BAA6E]/10' : ''}`}>微信</button>
-            <button onClick={() => setPaymentMethod('alipay')} className={`flex-1 py-2 rounded-lg border ${paymentMethod === 'alipay' ? 'border-[#8BAA6E] bg-[#8BAA6E]/10' : ''}`}>支付宝</button>
-            <button onClick={() => setPaymentMethod('visa')} className={`flex-1 py-2 rounded-lg border ${paymentMethod === 'visa' ? 'border-[#8BAA6E] bg-[#8BAA6E]/10' : ''}`}>Visa</button>
-          </div>
-        </div>
-        <button onClick={handlePayment} className="w-full py-3 bg-[#8BAA6E] text-white rounded-lg font-bold">{t('pay')}</button>
-        <button onClick={() => setCurrentPage('home')} className="w-full mt-3 py-2 text-gray-500 underline">返回</button>
-      </div>
-    </div>
-  );
-
+  // Home Page
   const renderHome = () => (
-    <div className={`flex flex-col h-screen ${isDark ? 'bg-[#1E2A1E] text-[#E8E3D9]' : 'bg-[#F9F7F2] text-[#3A2C1F]'}`}>
-      <header className={`h-20 flex items-center justify-between px-8 border-b ${isDark ? 'border-[#2C3A2C]' : 'border-[#E8E3D9]'} bg-opacity-80 backdrop-blur-xl sticky top-0 z-10`}>
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-[#8BAA6E] rounded-xl flex items-center justify-center shadow-lg">
-            <span className="text-white font-serif text-xl">半</span>
+    <div className="flex flex-col min-h-screen bg-background text-foreground">
+      {/* Header */}
+      <motion.header 
+        style={{ opacity: headerOpacity }}
+        className="fixed top-0 left-0 right-0 h-20 flex items-center justify-between px-8 border-b border-border bg-background/80 backdrop-blur-xl z-50"
+      >
+        <motion.div 
+          className="flex items-center gap-6"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <div className="w-10 h-10 bg-primary flex items-center justify-center">
+            <span className="text-primary-foreground font-mono text-sm">BL</span>
           </div>
-          <h1 className="font-black text-xl tracking-tighter hidden md:block">BANLIANG GLOBAL</h1>
-        </div>
+          <h1 className="font-light text-lg tracking-[0.3em] uppercase hidden md:block">Banliang</h1>
+        </motion.div>
 
-        <div className="flex items-center gap-2">
-          <button onClick={() => setLang('zh')} className={`px-2 py-1 rounded ${lang === 'zh' ? 'bg-[#8BAA6E] text-white' : ''}`}>中文</button>
-          <button onClick={() => setLang('en')} className={`px-2 py-1 rounded ${lang === 'en' ? 'bg-[#8BAA6E] text-white' : ''}`}>EN</button>
-          <button onClick={() => setShowHistoryModal(true)} className="px-3 py-1 rounded text-sm bg-[#8BAA6E]/20 hover:bg-[#8BAA6E]/40 transition">
-            📊 {t('tradeHistory')}
+        <motion.div 
+          className="flex items-center gap-8"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <div className="flex items-center gap-1 text-xs tracking-wider">
+            <button 
+              onClick={() => setLang('zh')} 
+              className={`px-3 py-2 transition-colors ${lang === 'zh' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              ZH
+            </button>
+            <span className="text-border">/</span>
+            <button 
+              onClick={() => setLang('en')} 
+              className={`px-3 py-2 transition-colors ${lang === 'en' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              EN
+            </button>
+          </div>
+          
+          <button 
+            onClick={() => setShowHistoryModal(true)} 
+            className="text-xs tracking-wider text-muted-foreground hover:text-foreground transition-colors uppercase"
+          >
+            History
           </button>
-        </div>
 
-        <div className={`flex items-center gap-4 px-5 py-2 rounded-2xl ${isDark ? 'bg-[#2C3A2C]' : 'bg-[#E8E3D9]'}`}>
-          <div className="text-right mr-2">
-            <p className="text-[10px] font-black opacity-60 uppercase">{t('nextReward')}</p>
-            <p className="text-xs font-bold text-[#8BAA6E]">{t('snackIncubating')}</p>
-          </div>
-          <div className="w-24 h-3 bg-[#D9D0C0] dark:bg-[#4A5A4A] rounded-full overflow-hidden">
-            <div className="h-full bg-[#8BAA6E] transition-all duration-700" style={{ width: `${currentProgress}%` }} />
-          </div>
-          <span className="text-xl">{currentProgress > 80 ? '🎁' : '🥣'}</span>
-        </div>
-
-        <div className="flex items-center gap-6">
           <div className="text-right">
-            <p className="text-[10px] opacity-60 font-bold uppercase">{t('netWorth')}</p>
-            <p className="font-mono font-bold text-lg text-[#8BAA6E]">${(balance + totalEquity).toLocaleString()}</p>
+            <p className="text-[10px] tracking-[0.2em] text-muted-foreground uppercase">{t('netWorth')}</p>
+            <motion.p 
+              className="font-mono text-lg"
+              key={balance + totalEquity}
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              ${(balance + totalEquity).toLocaleString()}
+            </motion.p>
           </div>
-          <button onClick={() => setIsDark(!isDark)} className="text-xl opacity-60 hover:opacity-100 transition">
-            {isDark ? '☀️' : '🌙'}
-          </button>
-          {user && (
-            <button onClick={() => setCurrentPage('login')} className="text-sm px-3 py-1 rounded-full bg-[#8BAA6E]/20">
+
+          {user ? (
+            <button 
+              onClick={() => setCurrentPage('login')} 
+              className="text-xs px-4 py-2 border border-border hover:bg-secondary transition-colors"
+            >
               {user.username}
             </button>
+          ) : (
+            <MagneticButton onClick={() => setCurrentPage('login')} variant="outline">
+              Login
+            </MagneticButton>
           )}
-        </div>
-      </header>
+        </motion.div>
+      </motion.header>
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* 左侧市场 */}
-        <aside className={`w-64 border-r ${isDark ? 'border-[#2C3A2C]' : 'border-[#E8E3D9]'} p-4 overflow-y-auto`}>
-          <div className="mb-4">
+      {/* Main Content */}
+      <div className="flex flex-1 pt-20">
+        {/* Left Sidebar - Market */}
+        <motion.aside 
+          className="w-80 border-r border-border p-6 overflow-y-auto fixed left-0 top-20 bottom-0 bg-background"
+          initial="hidden"
+          animate="visible"
+          variants={staggerContainer}
+        >
+          <motion.div variants={fadeInUp} className="mb-8">
             <input
               type="text"
               placeholder={t('searchStock')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-1 focus:ring-[#8BAA6E]"
+              className="w-full px-4 py-3 text-sm bg-transparent border-b border-border focus:border-primary outline-none transition-colors placeholder:text-muted-foreground"
             />
-          </div>
-          <p className="text-[10px] font-black opacity-40 tracking-[0.2em] mb-4 uppercase">{t('liveMarket')}</p>
-          {filteredAssets.map(a => (
-            <div
-              key={a.id}
-              onClick={() => setActiveId(a.id)}
-              className={`p-3 rounded-[20px] mb-2 cursor-pointer transition-all ${activeId === a.id ? 'bg-[#8BAA6E] text-white shadow-xl translate-x-1' : `bg-[#E8E3D9] dark:bg-[#2C3A2C] hover:bg-[#D9D0C0]`}`}
-            >
-              <div className="flex justify-between items-center mb-1">
-                <span className="font-bold text-sm">{a.id}</span>
-                <span className="w-2 h-2 rounded-full bg-white/50" />
-              </div>
-              <div className="flex justify-between">
-                <span className="text-[10px] opacity-70">{a.name}</span>
-                <span className="font-mono text-xs">${a.price.toLocaleString()}</span>
-              </div>
-            </div>
-          ))}
-          <div className="mt-8 p-5 rounded-[32px] bg-[#E8E3D9] dark:bg-[#2C3A2C] cursor-pointer" onClick={() => setShowPaymentModal(true)}>
-            <div className="text-2xl mb-2">🍵</div>
-            <p className="text-sm font-black">{t('buyTea')}</p>
-            <p className="text-[10px] opacity-60 mt-1">{t('supportDesc')}</p>
-            <button className="mt-3 text-[10px] font-bold px-3 py-1 rounded-full bg-white/60">{t('treat')}</button>
-          </div>
-        </aside>
+          </motion.div>
+          
+          <motion.p 
+            variants={fadeInUp}
+            className="text-[10px] tracking-[0.3em] text-muted-foreground mb-6 uppercase"
+          >
+            {t('liveMarket')}
+          </motion.p>
+          
+          <motion.div variants={staggerContainer}>
+            {filteredAssets.map((a, index) => (
+              <HoverRevealItem
+                key={a.id}
+                onClick={() => setActiveId(a.id)}
+                isActive={activeId === a.id}
+                imageUrl={`https://picsum.photos/id/${index + 10}/400/300`}
+              >
+                <div className="flex justify-between items-center">
+                  <div>
+                    <span className="font-mono text-sm">{a.id}</span>
+                    <span className="text-xs text-muted-foreground ml-3">{a.name}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-sm">${a.price.toLocaleString()}</span>
+                    <motion.span 
+                      className={`w-2 h-2 rounded-full ${a.price > ASSETS.find(x => x.id === a.id)!.price * 0.999 ? 'bg-success' : 'bg-danger'}`}
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    />
+                  </div>
+                </div>
+              </HoverRevealItem>
+            ))}
+          </motion.div>
 
-        {/* 中间主区 */}
-        <main className="flex-1 p-6 overflow-y-auto">
+          {/* Support Section */}
+          <motion.div 
+            variants={fadeInUp}
+            className="mt-12 p-6 border border-border cursor-pointer group"
+            onClick={() => setShowPaymentModal(true)}
+            whileHover={{ backgroundColor: 'rgba(39, 39, 42, 0.5)' }}
+          >
+            <p className="text-xs tracking-[0.2em] text-muted-foreground uppercase mb-2">{t('buyTea')}</p>
+            <p className="text-sm font-light mb-4">{t('supportDesc')}</p>
+            <span className="text-xs tracking-wider uppercase text-muted-foreground group-hover:text-foreground transition-colors">
+              {t('treat')} &rarr;
+            </span>
+          </motion.div>
+        </motion.aside>
+
+        {/* Center - Main Trading Area */}
+        <main className="flex-1 ml-80 mr-96 p-8 overflow-y-auto">
           <div className="max-w-4xl mx-auto">
-            <div className="flex justify-between items-end mb-6">
-              <div>
-                <p className="text-sm opacity-60 uppercase">{activeAsset.zone} · {activeAsset.name}</p>
-                <h2 className="text-5xl font-extralight">${activeAsset.price.toLocaleString()}</h2>
+            {/* Asset Header */}
+            <motion.div 
+              className="mb-12"
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              <p className="text-xs tracking-[0.3em] text-muted-foreground uppercase mb-4">
+                {activeAsset.zone} / {activeAsset.name}
+              </p>
+              <div className="flex items-end justify-between">
+                <div>
+                  <AnimatedText 
+                    text={`$${activeAsset.price.toLocaleString()}`}
+                    className="text-7xl font-light tracking-tight"
+                  />
+                </div>
+                <motion.div 
+                  className="flex items-center gap-2 pb-4"
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <span className="w-2 h-2 rounded-full bg-success" />
+                  <span className="text-xs tracking-wider uppercase">Live</span>
+                </motion.div>
               </div>
-              <div className="text-right pb-2">
-                <span className="text-xs bg-[#8BAA6E]/10 text-[#8BAA6E] px-3 py-1 rounded-full">● LIVE</span>
-              </div>
-            </div>
+            </motion.div>
 
-            <div className="mb-8">
-              <div className="flex justify-between items-center mb-3 flex-wrap gap-2">
-                <h3 className="font-bold">{t('priceChart')}</h3>
-                <div className="flex gap-2 text-xs">
+            {/* Chart Section */}
+            <motion.div 
+              className="mb-12"
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xs tracking-[0.3em] text-muted-foreground uppercase">{t('priceChart')}</h3>
+                <div className="flex gap-1">
                   {(['1m', '10m', '1h', '1d', '1mo', '1y'] as const).map(range => (
                     <button
                       key={range}
                       onClick={() => setChartRange(range)}
-                      className={`px-2 py-1 rounded ${chartRange === range ? 'bg-[#8BAA6E] text-white' : 'bg-gray-200 dark:bg-gray-700'}`}
+                      className={`px-3 py-1 text-xs tracking-wider transition-colors ${
+                        chartRange === range 
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
                     >
                       {t(range)}
                     </button>
                   ))}
                 </div>
               </div>
-              <div ref={chartContainerRef} style={{ width: '100%', height: 300 }} />
-              <p className="text-xs text-center text-gray-400 mt-2">提示：鼠标滚轮缩放，拖拽查看历史K线</p>
-            </div>
+              <div ref={chartContainerRef} className="w-full h-[350px] border border-border" />
+            </motion.div>
 
-            <div className={`p-6 rounded-[40px] border shadow-xl mb-6 ${isDark ? 'bg-[#2C3A2C] border-[#4A5A4A]' : 'bg-white/90 border-[#E8E3D9]'}`}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Trading Panel */}
+            <motion.div 
+              className="p-8 border border-border mb-12"
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+            >
+              <div className="grid grid-cols-2 gap-12">
                 <div>
-                  <label className="text-[10px] text-gray-400 font-black uppercase">{t('quantity')}</label>
+                  <label className="text-xs tracking-[0.3em] text-muted-foreground uppercase block mb-4">
+                    {t('quantity')}
+                  </label>
                   <input
                     type="number"
                     value={amt}
                     onChange={e => setAmt(e.target.value)}
                     placeholder="0.00"
-                    className="w-full text-3xl font-light bg-transparent border-b border-[#8BAA6E]/30 focus:border-[#8BAA6E] outline-none pb-2"
+                    className="w-full text-4xl font-light bg-transparent border-b border-border focus:border-primary outline-none pb-4 placeholder:text-muted-foreground"
                   />
-                  <p className="mt-2 text-xs text-gray-400">{t('estimated')} ${((parseFloat(amt) || 0) * activeAsset.price).toLocaleString()}</p>
+                  <p className="mt-4 text-sm text-muted-foreground">
+                    {t('estimated')} ${((parseFloat(amt) || 0) * activeAsset.price).toLocaleString()}
+                  </p>
                 </div>
-                <div className="flex flex-col gap-3">
-                  <button onClick={() => trade('buy')} className="w-full py-3 bg-[#8BAA6E] hover:bg-[#6F8E52] text-white rounded-2xl font-bold text-lg shadow-lg active:scale-95">{t('buy')}</button>
-                  <button onClick={() => trade('sell')} className={`w-full py-3 border-2 rounded-2xl font-bold ${isDark ? 'border-[#4A5A4A]' : 'border-[#E8E3D9]'}`}>{t('sell')}</button>
+                <div className="flex flex-col gap-4 justify-center">
+                  <MagneticButton onClick={() => trade('buy')} className="w-full">
+                    {t('buy')}
+                  </MagneticButton>
+                  <MagneticButton onClick={() => trade('sell')} variant="outline" className="w-full">
+                    {t('sell')}
+                  </MagneticButton>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              <div className={`p-4 rounded-3xl border ${isDark ? 'bg-[#2C3A2C]' : 'bg-white/90'}`}>
-                <p className="text-[10px] text-gray-400">{t('cash')}</p>
-                <p className="font-mono text-xl">${balance.toLocaleString()}</p>
-              </div>
-              <div className={`p-4 rounded-3xl border ${isDark ? 'bg-[#2C3A2C]' : 'bg-white/90'}`}>
-                <p className="text-[10px] text-gray-400">{t('equity')}</p>
-                <p className="font-mono text-xl text-[#8BAA6E]">${totalEquity.toLocaleString()}</p>
-              </div>
-              <div className="p-4 rounded-3xl border bg-[#8BAA6E]/10 cursor-pointer" onClick={() => setShowLevelModal(true)}>
-                <p className="text-[10px] text-[#8BAA6E]">{t('level')}</p>
-                <p className="font-mono text-xl font-bold">{getCurrentLevel(exp, lang)}</p>
-              </div>
-            </div>
+            {/* Stats Grid */}
+            <motion.div 
+              className="grid grid-cols-3 gap-6 mb-12"
+              variants={staggerContainer}
+              initial="hidden"
+              animate="visible"
+            >
+              <motion.div 
+                variants={scaleIn}
+                className="p-6 border border-border"
+              >
+                <p className="text-xs tracking-[0.2em] text-muted-foreground uppercase mb-2">{t('cash')}</p>
+                <p className="font-mono text-2xl">${balance.toLocaleString()}</p>
+              </motion.div>
+              <motion.div 
+                variants={scaleIn}
+                className="p-6 border border-border"
+              >
+                <p className="text-xs tracking-[0.2em] text-muted-foreground uppercase mb-2">{t('equity')}</p>
+                <p className="font-mono text-2xl text-success">${totalEquity.toLocaleString()}</p>
+              </motion.div>
+              <motion.div 
+                variants={scaleIn}
+                className="p-6 border border-border cursor-pointer hover:bg-secondary transition-colors"
+                onClick={() => setShowLevelModal(true)}
+              >
+                <p className="text-xs tracking-[0.2em] text-muted-foreground uppercase mb-2">{t('level')}</p>
+                <p className="font-mono text-2xl">{getCurrentLevel(exp, lang)}</p>
+              </motion.div>
+            </motion.div>
 
-            <div className="mt-6">
-              <p className="text-[10px] text-gray-400 font-black mb-3 uppercase text-center">{t('portfolio')}</p>
-              <div className="flex h-2 w-full rounded-full overflow-hidden bg-[#E8E3D9] dark:bg-[#2C3A2C]">
+            {/* Portfolio Bar */}
+            <motion.div 
+              className="mb-12"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+            >
+              <p className="text-xs tracking-[0.3em] text-muted-foreground uppercase mb-4 text-center">{t('portfolio')}</p>
+              <div className="flex h-1 w-full overflow-hidden bg-secondary">
                 {prices.map(a => {
                   const qty = shares[a.id] || 0;
                   const weight = totalEquity > 0 ? (qty * a.price) / totalEquity * 100 : 0;
-                  return <div key={a.id} className={`h-full ${a.color}`} style={{ width: `${weight}%` }} title={`${a.id}: ${weight.toFixed(1)}%`} />;
+                  return (
+                    <motion.div 
+                      key={a.id} 
+                      className="h-full bg-primary"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${weight}%` }}
+                      transition={{ duration: 0.8 }}
+                      title={`${a.id}: ${weight.toFixed(1)}%`}
+                    />
+                  );
                 })}
               </div>
-              {totalEquity === 0 && <p className="text-[10px] text-center mt-2 opacity-40">{t('noPosition')}</p>}
-            </div>
+              {totalEquity === 0 && (
+                <p className="text-xs text-center mt-4 text-muted-foreground">{t('noPosition')}</p>
+              )}
+            </motion.div>
 
+            {/* Progress Bar */}
+            <motion.div 
+              className="mb-12"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+            >
+              <div className="flex justify-between items-center mb-2">
+                <p className="text-xs tracking-[0.2em] text-muted-foreground uppercase">{t('nextReward')}</p>
+                <p className="text-xs text-muted-foreground">{currentProgress}%</p>
+              </div>
+              <div className="h-1 w-full bg-secondary overflow-hidden">
+                <motion.div 
+                  className="h-full bg-primary"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${currentProgress}%` }}
+                  transition={{ duration: 0.5 }}
+                />
+              </div>
+            </motion.div>
+
+            {/* Food Collection */}
             {unlockedFoods.length > 0 && (
-              <div className="mt-8">
-                <p className="text-[10px] text-gray-400 font-black mb-3 uppercase text-center">{t('foodGallery')}</p>
-                <div className="flex flex-wrap gap-3 justify-center">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-12"
+              >
+                <p className="text-xs tracking-[0.3em] text-muted-foreground uppercase mb-6 text-center">{t('foodGallery')}</p>
+                <div className="grid grid-cols-4 gap-4">
                   {unlockedFoods.slice(0, 8).map((food, idx) => (
-                    <div key={idx} className={`w-16 h-16 rounded-2xl ${food.color} flex flex-col items-center justify-center shadow-sm`} title={food.desc}>
-                      <span className="text-2xl">{food.icon}</span>
-                      <span className="text-[8px] font-bold mt-1">{food.name}</span>
-                    </div>
+                    <motion.div 
+                      key={idx}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: idx * 0.1 }}
+                      className="aspect-square border border-border flex flex-col items-center justify-center p-4 hover:bg-secondary transition-colors"
+                      title={food.desc}
+                    >
+                      <span className="font-mono text-2xl mb-2">{food.icon}</span>
+                      <span className="text-xs tracking-wider">{food.name}</span>
+                    </motion.div>
                   ))}
                 </div>
-              </div>
+              </motion.div>
             )}
           </div>
         </main>
 
-        {/* 右侧情报 */}
-        <aside className={`w-72 border-l ${isDark ? 'border-[#2C3A2C]' : 'border-[#E8E3D9]'} p-4 overflow-y-auto`}>
-          <div className="mb-4">
+        {/* Right Sidebar - News */}
+        <motion.aside 
+          className="w-96 border-l border-border p-6 overflow-y-auto fixed right-0 top-20 bottom-0 bg-background"
+          initial={{ opacity: 0, x: 40 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+        >
+          <div className="mb-8">
             <input
               type="text"
               placeholder={t('searchNews')}
               value={newsSearchTerm}
               onChange={(e) => setNewsSearchTerm(e.target.value)}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-1 focus:ring-[#8BAA6E]"
+              className="w-full px-4 py-3 text-sm bg-transparent border-b border-border focus:border-primary outline-none transition-colors placeholder:text-muted-foreground"
             />
           </div>
-          <p className="text-[10px] font-black opacity-40 uppercase mb-4">{t('intelligence')}</p>
-          <div className="space-y-4">
-            {paginatedNews.map(n => (
-              <div
+          
+          <p className="text-xs tracking-[0.3em] text-muted-foreground mb-6 uppercase">{t('intelligence')}</p>
+          
+          <div className="space-y-0">
+            {paginatedNews.map((n, index) => (
+              <HoverRevealItem
                 key={n.id}
                 onClick={() => setSelectedNews(n)}
-                className={`p-4 rounded-2xl border cursor-pointer transition-all hover:scale-[1.02] ${isDark ? 'bg-[#2C3A2C] border-[#4A5A4A] hover:bg-[#3A4A3A]' : 'bg-white/90 border-[#E8E3D9] hover:bg-white'}`}
+                imageUrl={n.imageUrl}
               >
-                {n.imageUrl && (
-                  <img
-                    src={n.imageUrl}
-                    alt="news"
-                    className="w-full h-28 object-cover rounded-lg mb-3"
-                    onError={(e) => (e.currentTarget.style.display = 'none')}
-                  />
-                )}
                 <div className="flex justify-between items-start mb-2">
-                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md ${n.impact === 'positive' ? 'bg-[#8BAA6E]/20 text-[#8BAA6E]' : n.impact === 'warning' ? 'bg-red-500/20 text-red-500' : 'bg-gray-400/20 text-gray-500'}`}>
+                  <span className={`text-[10px] tracking-wider uppercase ${
+                    n.impact === 'positive' ? 'text-success' : 
+                    n.impact === 'warning' ? 'text-danger' : 'text-muted-foreground'
+                  }`}>
                     {lang === 'zh' ? n.tag : n.tagEn}
                   </span>
-                  <span className="text-[9px] opacity-50">{lang === 'zh' ? n.tag : n.tagEn}</span>
+                  <span className="text-[10px] text-muted-foreground">{n.sourceEn}</span>
                 </div>
-                <h4 className="text-sm font-bold mt-1 line-clamp-2">{lang === 'zh' ? n.title : n.titleEn}</h4>
-                <p className="text-xs opacity-70 mt-1 line-clamp-2">{lang === 'zh' ? n.body : n.bodyEn}</p>
-              </div>
+                <h4 className="text-sm font-light leading-relaxed">{lang === 'zh' ? n.title : n.titleEn}</h4>
+              </HoverRevealItem>
             ))}
-            {/* 加载更多触发器 */}
             <div ref={loadMoreRef} className="h-10 flex justify-center items-center">
               {paginatedNews.length < filteredNews.length && (
-                <span className="text-xs text-gray-400">加载更多...</span>
+                <motion.span 
+                  className="text-xs text-muted-foreground"
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                  Loading more...
+                </motion.span>
               )}
             </div>
           </div>
-        </aside>
+        </motion.aside>
       </div>
 
-      {/* 等级模态框 */}
-      {showLevelModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowLevelModal(false)}>
-          <div className="bg-white dark:bg-[#2C3A2C] rounded-2xl p-6 max-w-md w-full" onClick={e => e.stopPropagation()}>
-            <h2 className="text-xl font-bold mb-4">{t('levelTitle')}</h2>
-            <div className="space-y-4">
-              {LEVELS.map((level, idx) => {
-                const isCurrent = exp >= level.threshold && (idx === LEVELS.length - 1 || exp < LEVELS[idx + 1].threshold);
-                const isLocked = exp < level.threshold;
-                return (
-                  <div key={idx} className={`p-4 rounded-xl border ${isCurrent ? 'bg-[#8BAA6E]/20 border-[#8BAA6E]' : isLocked ? 'opacity-40' : ''}`}>
-                    <div className="flex justify-between items-center">
-                      <h3 className="font-bold">{lang === 'zh' ? level.zh : level.en}</h3>
-                      <span className="text-xs text-gray-500">{level.threshold} {t('expRequired')}</span>
-                    </div>
-                    <p className="text-xs mt-1">{lang === 'zh' ? `达到 ${level.threshold} 经验解锁` : `Reach ${level.threshold} EXP to unlock`}</p>
-                    {isCurrent && <p className="text-xs text-[#8BAA6E] mt-2">{t('currentLevel')}</p>}
-                    {!isCurrent && !isLocked && idx < LEVELS.length - 1 && (
-                      <p className="text-xs mt-2">{t('nextLevelExp')} {LEVELS[idx + 1].threshold - exp} {t('expRequired')}</p>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            <button onClick={() => setShowLevelModal(false)} className="mt-6 w-full py-2 bg-gray-200 dark:bg-gray-700 rounded-lg">关闭</button>
-          </div>
-        </div>
-      )}
-
-      {/* 支付模态框 */}
-      {showPaymentModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowPaymentModal(false)}>
-          <div className="bg-white dark:bg-[#2C3A2C] rounded-2xl p-6 max-w-md w-full" onClick={e => e.stopPropagation()}>
-            <h2 className="text-xl font-bold mb-4">{t('selectDrink')}</h2>
-            <div className="space-y-4 mb-6">
-              {Object.entries(drinkNames).map(([key, name]) => (
-                <label key={key} className="flex items-center p-3 border rounded-lg cursor-pointer">
-                  <input type="radio" name="drink" value={key} checked={selectedDrink === key} onChange={() => setSelectedDrink(key as any)} className="mr-3" />
-                  <span className="flex-1">{name}</span>
-                  <span>¥{drinkPrices[key as keyof typeof drinkPrices]}</span>
-                </label>
-              ))}
-            </div>
-            <div className="mb-6">
-              <p className="font-bold mb-2">{t('paymentMethod')}</p>
-              <div className="flex gap-4">
-                <button onClick={() => setPaymentMethod('wechat')} className={`flex-1 py-2 rounded-lg border ${paymentMethod === 'wechat' ? 'border-[#8BAA6E] bg-[#8BAA6E]/10' : ''}`}>微信</button>
-                <button onClick={() => setPaymentMethod('alipay')} className={`flex-1 py-2 rounded-lg border ${paymentMethod === 'alipay' ? 'border-[#8BAA6E] bg-[#8BAA6E]/10' : ''}`}>支付宝</button>
-                <button onClick={() => setPaymentMethod('visa')} className={`flex-1 py-2 rounded-lg border ${paymentMethod === 'visa' ? 'border-[#8BAA6E] bg-[#8BAA6E]/10' : ''}`}>Visa</button>
+      {/* Modals */}
+      <AnimatePresence>
+        {showLevelModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-background/90 backdrop-blur-sm flex items-center justify-center z-50"
+            onClick={() => setShowLevelModal(false)}
+          >
+            <motion.div 
+              initial={{ opacity: 0, y: 40, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 40, scale: 0.95 }}
+              className="bg-background border border-border p-8 max-w-md w-full"
+              onClick={e => e.stopPropagation()}
+            >
+              <h2 className="text-2xl font-light mb-8">{t('levelTitle')}</h2>
+              <div className="space-y-4">
+                {LEVELS.map((level, idx) => {
+                  const isCurrent = exp >= level.threshold && (idx === LEVELS.length - 1 || exp < LEVELS[idx + 1].threshold);
+                  const isLocked = exp < level.threshold;
+                  return (
+                    <motion.div 
+                      key={idx}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: isLocked ? 0.4 : 1, x: 0 }}
+                      transition={{ delay: idx * 0.1 }}
+                      className={`p-4 border ${isCurrent ? 'border-primary bg-secondary' : 'border-border'}`}
+                    >
+                      <div className="flex justify-between items-center">
+                        <h3 className="font-mono">{lang === 'zh' ? level.zh : level.en}</h3>
+                        <span className="text-xs text-muted-foreground">{level.threshold} {t('expRequired')}</span>
+                      </div>
+                      {isCurrent && <p className="text-xs text-primary mt-2">{t('currentLevel')}</p>}
+                    </motion.div>
+                  );
+                })}
               </div>
-            </div>
-            <button onClick={handlePayment} className="w-full py-3 bg-[#8BAA6E] text-white rounded-lg font-bold">{t('pay')}</button>
-            <button onClick={() => setShowPaymentModal(false)} className="w-full mt-3 py-2 text-gray-500 underline">取消</button>
-          </div>
-        </div>
-      )}
+              <MagneticButton onClick={() => setShowLevelModal(false)} variant="outline" className="w-full mt-8">
+                Close
+              </MagneticButton>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* 交易历史模态框 */}
-      {showHistoryModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowHistoryModal(false)}>
-          <div className="bg-white dark:bg-[#2C3A2C] rounded-2xl p-6 max-w-3xl w-full max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <h2 className="text-xl font-bold mb-4">{t('tradeHistory')}</h2>
-            {tradeHistory.length === 0 ? (
-              <p className="text-center text-gray-500">{t('noHistory')}</p>
-            ) : (
-              <table className="w-full text-sm">
-                <thead className="border-b">
-                  <tr>
-                    <th className="text-left py-2">{t('time')}</th>
-                    <th className="text-left">{t('symbol')}</th>
-                    <th className="text-left">{t('direction')}</th>
-                    <th className="text-left">{t('priceUnit')}</th>
-                    <th className="text-left">{t('qtyUnit')}</th>
-                    <th className="text-left">{t('totalAmount')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tradeHistory.map(record => (
-                    <tr key={record.id} className="border-b last:border-0">
-                      <td className="py-2">{record.dateStr}</td>
-                      <td>{record.symbol}</td>
-                      <td className={record.direction === 'buy' ? 'text-green-600' : 'text-red-600'}>
-                        {t(record.direction === 'buy' ? 'buyDirection' : 'sellDirection')}
-                      </td>
-                      <td>${record.price.toFixed(2)}</td>
-                      <td>{record.quantity}</td>
-                      <td>${record.total.toFixed(2)}</td>
-                    </tr>
+      <AnimatePresence>
+        {showPaymentModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-background/90 backdrop-blur-sm flex items-center justify-center z-50"
+            onClick={() => setShowPaymentModal(false)}
+          >
+            <motion.div 
+              initial={{ opacity: 0, y: 40, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 40, scale: 0.95 }}
+              className="bg-background border border-border p-8 max-w-md w-full"
+              onClick={e => e.stopPropagation()}
+            >
+              <h2 className="text-2xl font-light mb-8">{t('selectDrink')}</h2>
+              <div className="space-y-3 mb-8">
+                {Object.entries(drinkNames).map(([key, name]) => (
+                  <label 
+                    key={key} 
+                    className={`flex items-center p-4 border cursor-pointer transition-colors ${
+                      selectedDrink === key ? 'border-primary bg-secondary' : 'border-border hover:border-muted-foreground'
+                    }`}
+                  >
+                    <input 
+                      type="radio" 
+                      name="drink" 
+                      value={key} 
+                      checked={selectedDrink === key} 
+                      onChange={() => setSelectedDrink(key as typeof selectedDrink)} 
+                      className="sr-only" 
+                    />
+                    <span className="flex-1">{name}</span>
+                    <span className="font-mono">${drinkPrices[key as keyof typeof drinkPrices]}</span>
+                  </label>
+                ))}
+              </div>
+              <div className="mb-8">
+                <p className="text-xs tracking-[0.2em] text-muted-foreground uppercase mb-4">{t('paymentMethod')}</p>
+                <div className="flex gap-2">
+                  {(['wechat', 'alipay', 'visa'] as const).map(method => (
+                    <button 
+                      key={method}
+                      onClick={() => setPaymentMethod(method)} 
+                      className={`flex-1 py-3 border text-xs uppercase tracking-wider transition-colors ${
+                        paymentMethod === method ? 'border-primary bg-secondary' : 'border-border'
+                      }`}
+                    >
+                      {method}
+                    </button>
                   ))}
-                </tbody>
-              </table>
-            )}
-            <button onClick={() => setShowHistoryModal(false)} className="mt-6 w-full py-2 bg-gray-200 dark:bg-gray-700 rounded-lg">关闭</button>
-          </div>
-        </div>
-      )}
+                </div>
+              </div>
+              <MagneticButton onClick={handlePayment} className="w-full">
+                {t('pay')}
+              </MagneticButton>
+              <button 
+                onClick={() => setShowPaymentModal(false)} 
+                className="w-full mt-4 py-3 text-muted-foreground text-sm hover:text-foreground transition-colors"
+              >
+                Cancel
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* 新闻详情模态框 */}
-      {selectedNews && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setSelectedNews(null)}>
-          <div className="bg-white dark:bg-[#2C3A2C] rounded-2xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <h2 className="text-xl font-bold mb-2">{lang === 'zh' ? selectedNews.title : selectedNews.titleEn}</h2>
-            <div className="flex gap-4 text-xs text-gray-500 mb-4">
-              <span>{lang === 'zh' ? selectedNews.source : selectedNews.sourceEn}</span>
-              <span>{lang === 'zh' ? selectedNews.date : selectedNews.dateEn}</span>
-            </div>
-            {selectedNews.imageUrl && (
-              <img src={selectedNews.imageUrl} alt="" className="w-full h-48 object-cover rounded-lg mb-4" />
-            )}
-            <p className="text-sm leading-relaxed whitespace-pre-line">
-              {lang === 'zh' ? selectedNews.fullContent : selectedNews.fullContentEn}
-            </p>
-            <button onClick={() => setSelectedNews(null)} className="mt-6 w-full py-2 bg-gray-200 dark:bg-gray-700 rounded-lg">{t('backToList')}</button>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {showHistoryModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-background/90 backdrop-blur-sm flex items-center justify-center z-50"
+            onClick={() => setShowHistoryModal(false)}
+          >
+            <motion.div 
+              initial={{ opacity: 0, y: 40, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 40, scale: 0.95 }}
+              className="bg-background border border-border p-8 max-w-3xl w-full max-h-[80vh] overflow-y-auto"
+              onClick={e => e.stopPropagation()}
+            >
+              <h2 className="text-2xl font-light mb-8">{t('tradeHistory')}</h2>
+              {tradeHistory.length === 0 ? (
+                <p className="text-center text-muted-foreground py-12">{t('noHistory')}</p>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead className="border-b border-border">
+                    <tr className="text-xs tracking-wider text-muted-foreground uppercase">
+                      <th className="text-left py-4">{t('time')}</th>
+                      <th className="text-left">{t('symbol')}</th>
+                      <th className="text-left">{t('direction')}</th>
+                      <th className="text-right">{t('priceUnit')}</th>
+                      <th className="text-right">{t('qtyUnit')}</th>
+                      <th className="text-right">{t('totalAmount')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tradeHistory.map((record, idx) => (
+                      <motion.tr 
+                        key={record.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: idx * 0.05 }}
+                        className="border-b border-border last:border-0"
+                      >
+                        <td className="py-4 text-muted-foreground">{record.dateStr}</td>
+                        <td className="font-mono">{record.symbol}</td>
+                        <td className={record.direction === 'buy' ? 'text-success' : 'text-danger'}>
+                          {t(record.direction === 'buy' ? 'buyDirection' : 'sellDirection')}
+                        </td>
+                        <td className="text-right font-mono">${record.price.toFixed(2)}</td>
+                        <td className="text-right font-mono">{record.quantity}</td>
+                        <td className="text-right font-mono">${record.total.toFixed(2)}</td>
+                      </motion.tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+              <MagneticButton onClick={() => setShowHistoryModal(false)} variant="outline" className="w-full mt-8">
+                Close
+              </MagneticButton>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {selectedNews && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-background/90 backdrop-blur-sm flex items-center justify-center z-50"
+            onClick={() => setSelectedNews(null)}
+          >
+            <motion.div 
+              initial={{ opacity: 0, y: 40, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 40, scale: 0.95 }}
+              className="bg-background border border-border p-8 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex gap-4 text-xs text-muted-foreground mb-4">
+                <span className={`uppercase tracking-wider ${
+                  selectedNews.impact === 'positive' ? 'text-success' : 
+                  selectedNews.impact === 'warning' ? 'text-danger' : ''
+                }`}>
+                  {lang === 'zh' ? selectedNews.tag : selectedNews.tagEn}
+                </span>
+                <span>{selectedNews.sourceEn}</span>
+                <span>{selectedNews.date}</span>
+              </div>
+              <h2 className="text-3xl font-light mb-6 leading-tight">
+                {lang === 'zh' ? selectedNews.title : selectedNews.titleEn}
+              </h2>
+              {selectedNews.imageUrl && (
+                <motion.img 
+                  src={selectedNews.imageUrl} 
+                  alt="" 
+                  className="w-full h-64 object-cover mb-6 grayscale hover:grayscale-0 transition-all duration-500"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                />
+              )}
+              <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-line">
+                {lang === 'zh' ? selectedNews.fullContent : selectedNews.fullContentEn}
+              </p>
+              <MagneticButton onClick={() => setSelectedNews(null)} variant="outline" className="w-full mt-8">
+                {t('backToList')}
+              </MagneticButton>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 
-  // 根据 currentPage 渲染不同页面
   if (currentPage === 'login') return renderLoginPage();
-  if (currentPage === 'payment') return renderPaymentPage();
   return renderHome();
 }
