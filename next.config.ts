@@ -1,7 +1,11 @@
-import type { NextConfig } from "next";
+const path = require('path');
 
-const nextConfig: NextConfig = {
-  /* config options here */
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  turbopack: {
+    // 明确指定项目根目录为当前目录
+    root: path.join(__dirname),
+  },
 };
 
-export default nextConfig;
+module.exports = nextConfig;
