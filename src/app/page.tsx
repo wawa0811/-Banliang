@@ -2,156 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createChart, CrosshairMode, CandlestickSeries } from 'lightweight-charts';
-import { motion, AnimatePresence, useInView, useScroll, useTransform } from 'framer-motion';
-
-// -------------------- Multi-language Config --------------------
-type Language = 'zh' | 'en';
-const translations = {
-  zh: {
-    netWorth: '总资产',
-    liveMarket: '实时行情',
-    intelligence: '深度情报',
-    buy: '买入',
-    sell: '卖出',
-    quantity: '份额',
-    estimated: '约',
-    cash: '现金',
-    equity: '持仓市值',
-    level: '经验等级',
-    portfolio: '持仓构成',
-    foodGallery: '美食图鉴',
-    noPosition: '暂无持仓，开始你的第一笔交易吧',
-    nextReward: '下一个奖励',
-    snackIncubating: '点心孵化中',
-    buyTea: '请程序员喝杯茶',
-    supportDesc: '支持我们持续维护，解锁更多风味',
-    treat: '投喂一杯',
-    levelTitle: '投资等级',
-    currentLevel: '当前等级',
-    nextLevelExp: '距下一级还需',
-    expRequired: '经验值',
-    insufficientFunds: '资金匮乏，建议轻仓',
-    insufficientShares: '持仓不足',
-    login: '登录',
-    register: '注册',
-    username: '用户名',
-    email: '邮箱',
-    phone: '手机号',
-    password: '密码',
-    confirmPassword: '确认密码',
-    bindWechat: '绑定微信',
-    wechatPlaceholder: '微信OpenID',
-    loginBtn: '登录',
-    registerBtn: '注册',
-    selectDrink: '选择饮品',
-    iceAmericano: '冰美式',
-    cappuccino: '卡布奇诺',
-    caramelLatte: '焦糖冰镇浓缩',
-    price: '价格',
-    paymentMethod: '支付方式',
-    wechatPay: '微信支付',
-    alipay: '支付宝',
-    visa: 'Visa',
-    pay: '立即支付',
-    paySuccess: '支付成功，感谢支持！',
-    priceChart: '价格走势',
-    '1m': '1分钟',
-    '10m': '10分钟',
-    '1h': '1小时',
-    '1d': '1天',
-    '1mo': '1个月',
-    '1y': '1年',
-    searchStock: '搜索股票代码或名称',
-    searchNews: '搜索新闻...',
-    newsDetail: '新闻详情',
-    source: '来源',
-    date: '日期',
-    fullText: '全文',
-    backToList: '返回列表',
-    tradeHistory: '交易历史',
-    noHistory: '暂无交易记录',
-    time: '时间',
-    direction: '方向',
-    buyDirection: '买入',
-    sellDirection: '卖出',
-    priceUnit: '价格',
-    qtyUnit: '数量',
-    totalAmount: '总额',
-    symbol: '代码',
-  },
-  en: {
-    netWorth: 'Net Worth',
-    liveMarket: 'Live Market',
-    intelligence: 'Intelligence',
-    buy: 'Buy',
-    sell: 'Sell',
-    quantity: 'Quantity',
-    estimated: 'Est.',
-    cash: 'Cash',
-    equity: 'Equity',
-    level: 'Level',
-    portfolio: 'Portfolio',
-    foodGallery: 'Food Gallery',
-    noPosition: 'No positions yet',
-    nextReward: 'Next Reward',
-    snackIncubating: 'Snack incubating...',
-    buyTea: 'Buy the dev a tea',
-    supportDesc: 'Unlock more flavors',
-    treat: 'Treat',
-    levelTitle: 'Investment Levels',
-    currentLevel: 'Current Level',
-    nextLevelExp: 'Next level in',
-    expRequired: 'EXP',
-    insufficientFunds: 'Insufficient Balance',
-    insufficientShares: 'Insufficient Shares',
-    login: 'Login',
-    register: 'Register',
-    username: 'Username',
-    email: 'Email',
-    phone: 'Phone',
-    password: 'Password',
-    confirmPassword: 'Confirm Password',
-    bindWechat: 'Bind WeChat',
-    wechatPlaceholder: 'WeChat OpenID',
-    loginBtn: 'Login',
-    registerBtn: 'Register',
-    selectDrink: 'Select Drink',
-    iceAmericano: 'Iced Americano',
-    cappuccino: 'Cappuccino',
-    caramelLatte: 'Caramel Latte',
-    price: 'Price',
-    paymentMethod: 'Payment Method',
-    wechatPay: 'WeChat Pay',
-    alipay: 'Alipay',
-    visa: 'Visa',
-    pay: 'Pay Now',
-    paySuccess: 'Payment successful!',
-    priceChart: 'Price Chart',
-    '1m': '1m',
-    '10m': '10m',
-    '1h': '1h',
-    '1d': '1d',
-    '1mo': '1mo',
-    '1y': '1y',
-    searchStock: 'Search symbol or name',
-    searchNews: 'Search news...',
-    newsDetail: 'News Detail',
-    source: 'Source',
-    date: 'Date',
-    fullText: 'Full Text',
-    backToList: 'Back',
-    tradeHistory: 'Trade History',
-    noHistory: 'No trades yet',
-    time: 'Time',
-    direction: 'Direction',
-    buyDirection: 'Buy',
-    sellDirection: 'Sell',
-    priceUnit: 'Price',
-    qtyUnit: 'Qty',
-    totalAmount: 'Total',
-    symbol: 'Symbol',
-  }
-};
+import { motion, AnimatePresence, useInView, useScroll, useTransform, useMotionValue, useSpring } from 'framer-motion';
 
 // -------------------- Asset Data --------------------
 const ASSETS = [
@@ -182,18 +33,18 @@ const FOOD_COLLECTION = [
 ];
 
 const LEVELS = [
-  { threshold: 0, zh: '韭菜萌新', en: 'Sprout' },
-  { threshold: 100, zh: '短线快手', en: 'Quick Hand' },
-  { threshold: 500, zh: '华尔街学徒', en: 'Apprentice' },
-  { threshold: 1000, zh: '半两大空头', en: 'Legendary' },
+  { threshold: 0, name: 'Sprout' },
+  { threshold: 100, name: 'Quick Hand' },
+  { threshold: 500, name: 'Apprentice' },
+  { threshold: 1000, name: 'Legendary' },
 ];
 
 // -------------------- News Data --------------------
 const NEWS_TEMPLATES = [
-  { tag: '宏观', tagEn: 'Macro', impact: 'positive', titles: ['Fed Holds Rates Steady', 'Non-Farm Data Beats', 'Inflation Cools', 'GDP Revised Up', 'Consumer Confidence Rises'] },
-  { tag: '科技', tagEn: 'Tech', impact: 'positive', titles: ['NVIDIA New Architecture', 'Apple WWDC', 'AI Chip Demand Surges', 'Microsoft Cloud Growth', 'Google Quantum Push'] },
-  { tag: '亚洲', tagEn: 'Asia', impact: 'warning', titles: ['Yen Volatility Spikes', 'HSI Technical Pullback', 'China Data Release', 'Korean Outflows', 'SEA Markets Choppy'] },
-  { tag: '突发', tagEn: 'Flash', impact: 'neutral', titles: ['Analyst Risk Alert', 'Geopolitical Impact', 'Commodity Price Move', 'Exchange Tech Issue', 'Earnings Season Begins'] },
+  { tag: 'Macro', impact: 'positive', titles: ['Fed Holds Rates Steady', 'Non-Farm Data Beats', 'Inflation Cools', 'GDP Revised Up', 'Consumer Confidence Rises'] },
+  { tag: 'Tech', impact: 'positive', titles: ['NVIDIA New Architecture', 'Apple WWDC', 'AI Chip Demand Surges', 'Microsoft Cloud Growth', 'Google Quantum Push'] },
+  { tag: 'Asia', impact: 'warning', titles: ['Yen Volatility Spikes', 'HSI Technical Pullback', 'China Data Release', 'Korean Outflows', 'SEA Markets Choppy'] },
+  { tag: 'Flash', impact: 'neutral', titles: ['Analyst Risk Alert', 'Geopolitical Impact', 'Commodity Price Move', 'Exchange Tech Issue', 'Earnings Season Begins'] },
 ];
 
 const generateLargeNewsPool = (count: number) => {
@@ -207,18 +58,12 @@ const generateLargeNewsPool = (count: number) => {
     pool.push({
       id: i,
       tag: template.tag,
-      tagEn: template.tagEn,
-      title: `${template.titles[titleIndex]}${i > 200 ? ' (Updated)' : ''}`,
-      titleEn: template.titles[titleIndex],
-      body: 'Related content summary, click for more details.',
-      bodyEn: 'Summary content, click for details.',
+      title: template.titles[titleIndex],
+      body: 'Summary content, click for details.',
       impact: template.impact,
       source: ['Reuters', 'Bloomberg', 'CNBC', 'Banliang'][i % 4],
-      sourceEn: ['Reuters', 'Bloomberg', 'CNBC', 'Banliang'][i % 4],
       date: date.toISOString().split('T')[0],
-      dateEn: date.toISOString().split('T')[0],
-      fullContent: `Full content: ${template.titles[titleIndex]}. This is simulated detailed news content.`,
-      fullContentEn: `Full content: ${template.titles[titleIndex]}. This is simulated news content.`,
+      fullContent: `Full content: ${template.titles[titleIndex]}. This is simulated news content.`,
       imageUrl: `https://picsum.photos/id/${(i % 100) + 1}/400/200`,
     });
   }
@@ -238,79 +83,46 @@ interface TradeRecord {
   dateStr: string;
 }
 
-// Animation Variants
-const fadeInUp = {
-  hidden: { opacity: 0, y: 60 },
-  visible: { 
-    opacity: 1, 
-    y: 0,
-    transition: { duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }
-  }
-};
-
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.1, delayChildren: 0.2 }
-  }
-};
-
-const slideInLeft = {
-  hidden: { opacity: 0, x: -60 },
-  visible: { 
-    opacity: 1, 
-    x: 0,
-    transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }
-  }
-};
-
-const scaleIn = {
-  hidden: { opacity: 0, scale: 0.9 },
-  visible: { 
-    opacity: 1, 
-    scale: 1,
-    transition: { duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }
-  }
-};
-
-const letterAnimation = {
-  hidden: { opacity: 0, y: 50 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.5,
-      delay: i * 0.03,
-      ease: [0.25, 0.46, 0.45, 0.94]
+// Smooth Scroll Hook
+function useSmoothScroll() {
+  const scrollTo = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
     }
-  })
-};
+  };
+  return scrollTo;
+}
 
-// Animated Text Component
-function AnimatedText({ text, className }: { text: string; className?: string }) {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
-  
+// Parallax Text Component
+function ParallaxText({ children, baseVelocity = 5 }: { children: React.ReactNode; baseVelocity?: number }) {
+  const baseX = useMotionValue(0);
+  const x = useSpring(baseX, { damping: 50, stiffness: 400 });
+
+  useEffect(() => {
+    let animationId: number;
+    let lastTime = 0;
+    
+    const animate = (time: number) => {
+      if (lastTime !== 0) {
+        const delta = time - lastTime;
+        baseX.set(baseX.get() - baseVelocity * (delta / 50));
+        if (baseX.get() < -1000) baseX.set(0);
+      }
+      lastTime = time;
+      animationId = requestAnimationFrame(animate);
+    };
+    
+    animationId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationId);
+  }, [baseVelocity, baseX]);
+
   return (
-    <motion.span
-      ref={ref}
-      className={`inline-block ${className}`}
-      initial="hidden"
-      animate={isInView ? "visible" : "hidden"}
-    >
-      {text.split('').map((char, i) => (
-        <motion.span
-          key={i}
-          custom={i}
-          variants={letterAnimation}
-          className="inline-block"
-          style={{ display: char === ' ' ? 'inline' : 'inline-block' }}
-        >
-          {char === ' ' ? '\u00A0' : char}
-        </motion.span>
+    <motion.div style={{ x }} className="flex whitespace-nowrap">
+      {[...Array(4)].map((_, i) => (
+        <span key={i} className="mx-8">{children}</span>
       ))}
-    </motion.span>
+    </motion.div>
   );
 }
 
@@ -341,11 +153,11 @@ function MagneticButton({
     setPosition({ x: 0, y: 0 });
   };
 
-  const baseStyles = "relative overflow-hidden font-medium tracking-wide uppercase text-xs";
+  const baseStyles = "relative overflow-hidden font-medium tracking-wide uppercase text-xs cursor-pointer";
   const variantStyles = {
-    primary: "bg-primary text-primary-foreground px-8 py-4",
+    primary: "bg-accent text-accent-foreground px-8 py-4 hover:bg-primary hover:text-primary-foreground",
     secondary: "bg-secondary text-secondary-foreground px-6 py-3",
-    outline: "border border-border px-6 py-3 hover:bg-primary hover:text-primary-foreground hover:border-primary"
+    outline: "border border-border px-6 py-3 hover:bg-accent hover:text-accent-foreground hover:border-accent"
   };
 
   return (
@@ -360,19 +172,30 @@ function MagneticButton({
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
     >
-      <motion.span
-        className="absolute inset-0 bg-accent"
-        initial={{ scaleX: 0 }}
-        whileHover={{ scaleX: 1 }}
-        transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-        style={{ transformOrigin: 'left' }}
-      />
       <span className="relative z-10">{children}</span>
     </motion.button>
   );
 }
 
-// Hover Reveal Image Component
+// Reveal Section Component
+function RevealSection({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 80 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 80 }}
+      transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+// Hover Reveal Item
 function HoverRevealItem({ 
   children, 
   imageUrl, 
@@ -397,7 +220,7 @@ function HoverRevealItem({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onMouseMove={handleMouseMove}
-      className={`relative cursor-pointer py-4 border-b border-border group ${isActive ? 'bg-secondary' : ''}`}
+      className={`relative cursor-pointer py-4 border-b border-border/50 group ${isActive ? 'bg-secondary/50' : ''}`}
       whileHover={{ x: 20 }}
       transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
     >
@@ -410,7 +233,7 @@ function HoverRevealItem({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             transition={{ duration: 0.3 }}
-            className="fixed pointer-events-none z-50 w-64 h-40 overflow-hidden"
+            className="fixed pointer-events-none z-50 w-64 h-40 overflow-hidden rounded-sm"
             style={{ 
               left: mousePosition.x + 20, 
               top: mousePosition.y - 80,
@@ -419,7 +242,7 @@ function HoverRevealItem({
             <img 
               src={imageUrl} 
               alt="" 
-              className="w-full h-full object-cover grayscale"
+              className="w-full h-full object-cover"
             />
           </motion.div>
         )}
@@ -428,10 +251,41 @@ function HoverRevealItem({
   );
 }
 
-export default function Home() {
-  const [lang, setLang] = useState<Language>('en');
-  const t = (key: keyof typeof translations.zh) => (translations[lang] as Record<string, string>)[key] || key;
+// Animated Counter
+function AnimatedCounter({ value, prefix = '', suffix = '' }: { value: number; prefix?: string; suffix?: string }) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true });
+  const [displayValue, setDisplayValue] = useState(0);
 
+  useEffect(() => {
+    if (isInView) {
+      const duration = 2000;
+      const steps = 60;
+      const increment = value / steps;
+      let current = 0;
+      const timer = setInterval(() => {
+        current += increment;
+        if (current >= value) {
+          setDisplayValue(value);
+          clearInterval(timer);
+        } else {
+          setDisplayValue(Math.floor(current));
+        }
+      }, duration / steps);
+      return () => clearInterval(timer);
+    }
+  }, [isInView, value]);
+
+  return (
+    <span ref={ref} className="font-mono">
+      {prefix}{displayValue.toLocaleString()}{suffix}
+    </span>
+  );
+}
+
+export default function Home() {
+  const scrollTo = useSmoothScroll();
+  
   // Core State
   const [balance, setBalance] = useState(1000000);
   const [shares, setShares] = useState<Record<string, number>>({});
@@ -443,7 +297,7 @@ export default function Home() {
   const [currentProgress, setCurrentProgress] = useState(0);
 
   // Page Routing
-  const [currentPage, setCurrentPage] = useState<'home' | 'login' | 'payment'>('home');
+  const [currentPage, setCurrentPage] = useState<'home' | 'login' | 'trading'>('home');
   const [user, setUser] = useState<{ username: string; wechatBound: boolean } | null>(null);
 
   // Chart Related
@@ -481,16 +335,16 @@ export default function Home() {
   }, [prices, searchTerm]);
 
   // News Related
-  const [allNews, setAllNews] = useState(INITIAL_NEWS_POOL);
+  const [allNews] = useState(INITIAL_NEWS_POOL);
   const [newsSearchTerm, setNewsSearchTerm] = useState('');
   const filteredNews = useMemo(() => {
     if (!newsSearchTerm.trim()) return allNews;
     const term = newsSearchTerm.toLowerCase();
     return allNews.filter(n => 
-      (lang === 'zh' ? n.title : n.titleEn).toLowerCase().includes(term) ||
-      (lang === 'zh' ? n.body : n.bodyEn).toLowerCase().includes(term)
+      n.title.toLowerCase().includes(term) ||
+      n.body.toLowerCase().includes(term)
     );
-  }, [newsSearchTerm, lang, allNews]);
+  }, [newsSearchTerm, allNews]);
 
   // Pagination
   const [newsPage, setNewsPage] = useState(1);
@@ -572,7 +426,7 @@ export default function Home() {
         setTradeHistory(prev => [record, ...prev]);
         setAmt('');
       } else {
-        alert(t('insufficientFunds'));
+        alert('Insufficient Balance');
       }
     } else {
       if ((shares[activeAsset.id] || 0) >= n) {
@@ -592,7 +446,7 @@ export default function Home() {
         setTradeHistory(prev => [record, ...prev]);
         setAmt('');
       } else {
-        alert(t('insufficientShares'));
+        alert('Insufficient Shares');
       }
     }
   };
@@ -607,7 +461,7 @@ export default function Home() {
   const [selectedDrink, setSelectedDrink] = useState<'americano' | 'cappuccino' | 'caramel'>('americano');
   const [paymentMethod, setPaymentMethod] = useState<'wechat' | 'alipay' | 'visa'>('wechat');
   const drinkPrices = { americano: 19.9, cappuccino: 39.9, caramel: 49.9 };
-  const drinkNames = { americano: t('iceAmericano'), cappuccino: t('cappuccino'), caramel: t('caramelLatte') };
+  const drinkNames = { americano: 'Iced Americano', cappuccino: 'Cappuccino', caramel: 'Caramel Latte' };
 
   const handlePayment = () => {
     if (!user) {
@@ -615,7 +469,7 @@ export default function Home() {
       setCurrentPage('login');
       return;
     }
-    alert(t('paySuccess'));
+    alert('Payment successful!');
     setShowPaymentModal(false);
   };
 
@@ -641,37 +495,37 @@ export default function Home() {
     setCurrentPage('home');
   };
 
-  const getCurrentLevel = (exp: number, lang: Language) => {
+  const getCurrentLevel = (exp: number) => {
     const level = LEVELS.filter(l => l.threshold <= exp).slice(-1)[0];
-    return lang === 'zh' ? level.zh : level.en;
+    return level.name;
   };
 
   // Chart Initialization
   useEffect(() => {
-    if (!chartContainerRef.current) return;
+    if (!chartContainerRef.current || currentPage !== 'trading') return;
 
     const chart = createChart(chartContainerRef.current, {
       width: chartContainerRef.current.clientWidth,
-      height: 350,
+      height: 400,
       layout: {
-        background: { color: '#0a0a0a' },
-        textColor: '#a1a1aa',
+        background: { color: '#0c0c0c' },
+        textColor: '#71717a',
       },
       grid: {
-        vertLines: { color: '#27272a' },
-        horzLines: { color: '#27272a' },
+        vertLines: { color: '#1a1a1a' },
+        horzLines: { color: '#1a1a1a' },
       },
       crosshair: { mode: CrosshairMode.Normal },
-      rightPriceScale: { borderColor: '#27272a' },
-      timeScale: { borderColor: '#27272a', timeVisible: true, secondsVisible: false },
+      rightPriceScale: { borderColor: '#1a1a1a' },
+      timeScale: { borderColor: '#1a1a1a', timeVisible: true, secondsVisible: false },
     });
     chartRef.current = chart;
 
     const candlestickSeries = chart.addSeries(CandlestickSeries, {
-      upColor: '#22c55e',
+      upColor: '#10b981',
       downColor: '#ef4444',
       borderVisible: false,
-      wickUpColor: '#22c55e',
+      wickUpColor: '#10b981',
       wickDownColor: '#ef4444',
     });
     seriesRef.current = candlestickSeries;
@@ -687,10 +541,10 @@ export default function Home() {
       window.removeEventListener('resize', handleResize);
       chart.remove();
     };
-  }, []);
+  }, [currentPage]);
 
   useEffect(() => {
-    if (seriesRef.current && staticChartData.length) {
+    if (seriesRef.current && staticChartData.length && currentPage === 'trading') {
       const formattedData = staticChartData.map((item, idx) => ({
         time: idx + 1,
         open: item.open,
@@ -701,11 +555,11 @@ export default function Home() {
       seriesRef.current.setData(formattedData);
       chartRef.current?.timeScale().fitContent();
     }
-  }, [staticChartData]);
+  }, [staticChartData, currentPage]);
 
   // Scroll Progress
   const { scrollYProgress } = useScroll();
-  const headerOpacity = useTransform(scrollYProgress, [0, 0.1], [1, 0.95]);
+  const headerBg = useTransform(scrollYProgress, [0, 0.1], ['rgba(12, 12, 12, 0)', 'rgba(12, 12, 12, 0.95)']);
 
   // Login Page
   const renderLoginPage = () => (
@@ -719,7 +573,7 @@ export default function Home() {
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.2 }}
-        className="w-full max-w-md p-12 border border-border"
+        className="w-full max-w-md p-12 border border-border/30 bg-secondary/20"
       >
         <motion.h2 
           className="text-4xl font-light tracking-tight text-center mb-12"
@@ -727,7 +581,7 @@ export default function Home() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          {isLogin ? t('login') : t('register')}
+          {isLogin ? 'Login' : 'Register'}
         </motion.h2>
         
         {isLogin ? (
@@ -738,25 +592,25 @@ export default function Home() {
           >
             <input
               type="text"
-              placeholder={t('username')}
-              className="w-full p-4 mb-6 bg-transparent border-b border-border focus:border-primary outline-none transition-colors text-foreground placeholder:text-muted-foreground"
+              placeholder="Username"
+              className="w-full p-4 mb-6 bg-transparent border-b border-border/50 focus:border-accent outline-none transition-colors text-foreground placeholder:text-muted-foreground"
               value={loginForm.username}
               onChange={e => setLoginForm({ ...loginForm, username: e.target.value })}
             />
             <input
               type="password"
-              placeholder={t('password')}
-              className="w-full p-4 mb-10 bg-transparent border-b border-border focus:border-primary outline-none transition-colors text-foreground placeholder:text-muted-foreground"
+              placeholder="Password"
+              className="w-full p-4 mb-10 bg-transparent border-b border-border/50 focus:border-accent outline-none transition-colors text-foreground placeholder:text-muted-foreground"
               value={loginForm.password}
               onChange={e => setLoginForm({ ...loginForm, password: e.target.value })}
             />
             <MagneticButton onClick={handleLogin} className="w-full">
-              {t('loginBtn')}
+              Login
             </MagneticButton>
             <p className="text-center mt-8 text-sm text-muted-foreground">
               {"Don't have an account?"}{' '}
-              <button onClick={() => setIsLogin(false)} className="text-primary underline underline-offset-4 hover:text-accent transition-colors">
-                {t('register')}
+              <button onClick={() => setIsLogin(false)} className="text-accent underline underline-offset-4 hover:text-foreground transition-colors">
+                Register
               </button>
             </p>
           </motion.div>
@@ -767,20 +621,20 @@ export default function Home() {
             transition={{ delay: 0.4 }}
             className="space-y-4"
           >
-            <input type="text" placeholder={t('username')} className="w-full p-4 bg-transparent border-b border-border focus:border-primary outline-none transition-colors" value={registerForm.username} onChange={e => setRegisterForm({ ...registerForm, username: e.target.value })} />
-            <input type="email" placeholder={t('email')} className="w-full p-4 bg-transparent border-b border-border focus:border-primary outline-none transition-colors" value={registerForm.email} onChange={e => setRegisterForm({ ...registerForm, email: e.target.value })} />
-            <input type="tel" placeholder={t('phone')} className="w-full p-4 bg-transparent border-b border-border focus:border-primary outline-none transition-colors" value={registerForm.phone} onChange={e => setRegisterForm({ ...registerForm, phone: e.target.value })} />
-            <input type="password" placeholder={t('password')} className="w-full p-4 bg-transparent border-b border-border focus:border-primary outline-none transition-colors" value={registerForm.password} onChange={e => setRegisterForm({ ...registerForm, password: e.target.value })} />
-            <input type="password" placeholder={t('confirmPassword')} className="w-full p-4 bg-transparent border-b border-border focus:border-primary outline-none transition-colors" value={registerForm.confirm} onChange={e => setRegisterForm({ ...registerForm, confirm: e.target.value })} />
+            <input type="text" placeholder="Username" className="w-full p-4 bg-transparent border-b border-border/50 focus:border-accent outline-none transition-colors" value={registerForm.username} onChange={e => setRegisterForm({ ...registerForm, username: e.target.value })} />
+            <input type="email" placeholder="Email" className="w-full p-4 bg-transparent border-b border-border/50 focus:border-accent outline-none transition-colors" value={registerForm.email} onChange={e => setRegisterForm({ ...registerForm, email: e.target.value })} />
+            <input type="tel" placeholder="Phone" className="w-full p-4 bg-transparent border-b border-border/50 focus:border-accent outline-none transition-colors" value={registerForm.phone} onChange={e => setRegisterForm({ ...registerForm, phone: e.target.value })} />
+            <input type="password" placeholder="Password" className="w-full p-4 bg-transparent border-b border-border/50 focus:border-accent outline-none transition-colors" value={registerForm.password} onChange={e => setRegisterForm({ ...registerForm, password: e.target.value })} />
+            <input type="password" placeholder="Confirm Password" className="w-full p-4 bg-transparent border-b border-border/50 focus:border-accent outline-none transition-colors" value={registerForm.confirm} onChange={e => setRegisterForm({ ...registerForm, confirm: e.target.value })} />
             <div className="pt-6">
               <MagneticButton onClick={handleRegister} className="w-full">
-                {t('registerBtn')}
+                Register
               </MagneticButton>
             </div>
             <p className="text-center pt-4 text-sm text-muted-foreground">
               Already have an account?{' '}
-              <button onClick={() => setIsLogin(true)} className="text-primary underline underline-offset-4">
-                {t('login')}
+              <button onClick={() => setIsLogin(true)} className="text-accent underline underline-offset-4">
+                Login
               </button>
             </p>
           </motion.div>
@@ -791,54 +645,30 @@ export default function Home() {
           className="w-full mt-6 py-3 text-muted-foreground text-sm hover:text-foreground transition-colors"
           whileHover={{ x: -5 }}
         >
-          &larr; Back to Trading
+          &larr; Back
         </motion.button>
       </motion.div>
     </motion.div>
   );
 
-  // Home Page
-  const renderHome = () => (
+  // Trading Platform Page
+  const renderTradingPage = () => (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
-      {/* Header */}
+      {/* Trading Header */}
       <motion.header 
-        style={{ opacity: headerOpacity }}
-        className="fixed top-0 left-0 right-0 h-20 flex items-center justify-between px-8 border-b border-border bg-background/80 backdrop-blur-xl z-50"
+        className="fixed top-0 left-0 right-0 h-16 flex items-center justify-between px-8 border-b border-border/30 bg-background/95 backdrop-blur-xl z-50"
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.6 }}
       >
-        <motion.div 
-          className="flex items-center gap-6"
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <div className="w-10 h-10 bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-mono text-sm">BL</span>
-          </div>
-          <h1 className="font-light text-lg tracking-[0.3em] uppercase hidden md:block">Banliang</h1>
-        </motion.div>
+        <div className="flex items-center gap-6">
+          <button onClick={() => setCurrentPage('home')} className="text-muted-foreground hover:text-foreground transition-colors">
+            &larr; Back
+          </button>
+          <h1 className="font-light text-sm tracking-[0.3em] uppercase">Trading Platform</h1>
+        </div>
 
-        <motion.div 
-          className="flex items-center gap-8"
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <div className="flex items-center gap-1 text-xs tracking-wider">
-            <button 
-              onClick={() => setLang('zh')} 
-              className={`px-3 py-2 transition-colors ${lang === 'zh' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-            >
-              ZH
-            </button>
-            <span className="text-border">/</span>
-            <button 
-              onClick={() => setLang('en')} 
-              className={`px-3 py-2 transition-colors ${lang === 'en' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-            >
-              EN
-            </button>
-          </div>
-          
+        <div className="flex items-center gap-8">
           <button 
             onClick={() => setShowHistoryModal(true)} 
             className="text-xs tracking-wider text-muted-foreground hover:text-foreground transition-colors uppercase"
@@ -847,9 +677,9 @@ export default function Home() {
           </button>
 
           <div className="text-right">
-            <p className="text-[10px] tracking-[0.2em] text-muted-foreground uppercase">{t('netWorth')}</p>
+            <p className="text-[10px] tracking-[0.2em] text-muted-foreground uppercase">Net Worth</p>
             <motion.p 
-              className="font-mono text-lg"
+              className="font-mono text-lg text-accent"
               key={balance + totalEquity}
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -859,47 +689,39 @@ export default function Home() {
           </div>
 
           {user ? (
-            <button 
-              onClick={() => setCurrentPage('login')} 
-              className="text-xs px-4 py-2 border border-border hover:bg-secondary transition-colors"
-            >
+            <span className="text-xs px-4 py-2 border border-border/50 text-muted-foreground">
               {user.username}
-            </button>
+            </span>
           ) : (
             <MagneticButton onClick={() => setCurrentPage('login')} variant="outline">
               Login
             </MagneticButton>
           )}
-        </motion.div>
+        </div>
       </motion.header>
 
-      {/* Main Content */}
-      <div className="flex flex-1 pt-20">
+      {/* Trading Content */}
+      <div className="flex flex-1 pt-16">
         {/* Left Sidebar - Market */}
         <motion.aside 
-          className="w-80 border-r border-border p-6 overflow-y-auto fixed left-0 top-20 bottom-0 bg-background"
-          initial="hidden"
-          animate="visible"
-          variants={staggerContainer}
+          className="w-80 border-r border-border/30 p-6 overflow-y-auto fixed left-0 top-16 bottom-0 bg-background"
+          initial={{ x: -100, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.6 }}
         >
-          <motion.div variants={fadeInUp} className="mb-8">
+          <div className="mb-8">
             <input
               type="text"
-              placeholder={t('searchStock')}
+              placeholder="Search symbol or name"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-3 text-sm bg-transparent border-b border-border focus:border-primary outline-none transition-colors placeholder:text-muted-foreground"
+              className="w-full px-4 py-3 text-sm bg-transparent border-b border-border/50 focus:border-accent outline-none transition-colors placeholder:text-muted-foreground"
             />
-          </motion.div>
+          </div>
           
-          <motion.p 
-            variants={fadeInUp}
-            className="text-[10px] tracking-[0.3em] text-muted-foreground mb-6 uppercase"
-          >
-            {t('liveMarket')}
-          </motion.p>
+          <p className="text-[10px] tracking-[0.3em] text-muted-foreground mb-6 uppercase">Live Market</p>
           
-          <motion.div variants={staggerContainer}>
+          <div>
             {filteredAssets.map((a, index) => (
               <HoverRevealItem
                 key={a.id}
@@ -923,19 +745,18 @@ export default function Home() {
                 </div>
               </HoverRevealItem>
             ))}
-          </motion.div>
+          </div>
 
           {/* Support Section */}
           <motion.div 
-            variants={fadeInUp}
-            className="mt-12 p-6 border border-border cursor-pointer group"
+            className="mt-12 p-6 border border-border/30 cursor-pointer group bg-secondary/20"
             onClick={() => setShowPaymentModal(true)}
-            whileHover={{ backgroundColor: 'rgba(39, 39, 42, 0.5)' }}
+            whileHover={{ backgroundColor: 'rgba(39, 39, 42, 0.3)' }}
           >
-            <p className="text-xs tracking-[0.2em] text-muted-foreground uppercase mb-2">{t('buyTea')}</p>
-            <p className="text-sm font-light mb-4">{t('supportDesc')}</p>
-            <span className="text-xs tracking-wider uppercase text-muted-foreground group-hover:text-foreground transition-colors">
-              {t('treat')} &rarr;
+            <p className="text-xs tracking-[0.2em] text-muted-foreground uppercase mb-2">Buy the dev a tea</p>
+            <p className="text-sm font-light mb-4 text-foreground/80">Unlock more flavors</p>
+            <span className="text-xs tracking-wider uppercase text-accent group-hover:text-foreground transition-colors">
+              Treat &rarr;
             </span>
           </motion.div>
         </motion.aside>
@@ -955,10 +776,9 @@ export default function Home() {
               </p>
               <div className="flex items-end justify-between">
                 <div>
-                  <AnimatedText 
-                    text={`$${activeAsset.price.toLocaleString()}`}
-                    className="text-7xl font-light tracking-tight"
-                  />
+                  <span className="text-7xl font-light tracking-tight text-accent">
+                    ${activeAsset.price.toLocaleString()}
+                  </span>
                 </div>
                 <motion.div 
                   className="flex items-center gap-2 pb-4"
@@ -979,7 +799,7 @@ export default function Home() {
               transition={{ duration: 0.8, delay: 0.2 }}
             >
               <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xs tracking-[0.3em] text-muted-foreground uppercase">{t('priceChart')}</h3>
+                <h3 className="text-xs tracking-[0.3em] text-muted-foreground uppercase">Price Chart</h3>
                 <div className="flex gap-1">
                   {(['1m', '10m', '1h', '1d', '1mo', '1y'] as const).map(range => (
                     <button
@@ -987,21 +807,21 @@ export default function Home() {
                       onClick={() => setChartRange(range)}
                       className={`px-3 py-1 text-xs tracking-wider transition-colors ${
                         chartRange === range 
-                          ? 'bg-primary text-primary-foreground' 
+                          ? 'bg-accent text-accent-foreground' 
                           : 'text-muted-foreground hover:text-foreground'
                       }`}
                     >
-                      {t(range)}
+                      {range}
                     </button>
                   ))}
                 </div>
               </div>
-              <div ref={chartContainerRef} className="w-full h-[350px] border border-border" />
+              <div ref={chartContainerRef} className="w-full h-[400px] border border-border/30 bg-secondary/20" />
             </motion.div>
 
             {/* Trading Panel */}
             <motion.div 
-              className="p-8 border border-border mb-12"
+              className="p-8 border border-border/30 mb-12 bg-secondary/20"
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.3 }}
@@ -1009,25 +829,25 @@ export default function Home() {
               <div className="grid grid-cols-2 gap-12">
                 <div>
                   <label className="text-xs tracking-[0.3em] text-muted-foreground uppercase block mb-4">
-                    {t('quantity')}
+                    Quantity
                   </label>
                   <input
                     type="number"
                     value={amt}
                     onChange={e => setAmt(e.target.value)}
                     placeholder="0.00"
-                    className="w-full text-4xl font-light bg-transparent border-b border-border focus:border-primary outline-none pb-4 placeholder:text-muted-foreground"
+                    className="w-full text-4xl font-light bg-transparent border-b border-border/50 focus:border-accent outline-none pb-4 placeholder:text-muted-foreground"
                   />
                   <p className="mt-4 text-sm text-muted-foreground">
-                    {t('estimated')} ${((parseFloat(amt) || 0) * activeAsset.price).toLocaleString()}
+                    Est. ${((parseFloat(amt) || 0) * activeAsset.price).toLocaleString()}
                   </p>
                 </div>
                 <div className="flex flex-col gap-4 justify-center">
                   <MagneticButton onClick={() => trade('buy')} className="w-full">
-                    {t('buy')}
+                    Buy
                   </MagneticButton>
                   <MagneticButton onClick={() => trade('sell')} variant="outline" className="w-full">
-                    {t('sell')}
+                    Sell
                   </MagneticButton>
                 </div>
               </div>
@@ -1036,31 +856,31 @@ export default function Home() {
             {/* Stats Grid */}
             <motion.div 
               className="grid grid-cols-3 gap-6 mb-12"
-              variants={staggerContainer}
-              initial="hidden"
-              animate="visible"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
             >
               <motion.div 
-                variants={scaleIn}
-                className="p-6 border border-border"
+                className="p-6 border border-border/30 bg-secondary/20"
+                whileHover={{ backgroundColor: 'rgba(39, 39, 42, 0.3)' }}
               >
-                <p className="text-xs tracking-[0.2em] text-muted-foreground uppercase mb-2">{t('cash')}</p>
+                <p className="text-xs tracking-[0.2em] text-muted-foreground uppercase mb-2">Cash</p>
                 <p className="font-mono text-2xl">${balance.toLocaleString()}</p>
               </motion.div>
               <motion.div 
-                variants={scaleIn}
-                className="p-6 border border-border"
+                className="p-6 border border-border/30 bg-secondary/20"
+                whileHover={{ backgroundColor: 'rgba(39, 39, 42, 0.3)' }}
               >
-                <p className="text-xs tracking-[0.2em] text-muted-foreground uppercase mb-2">{t('equity')}</p>
+                <p className="text-xs tracking-[0.2em] text-muted-foreground uppercase mb-2">Equity</p>
                 <p className="font-mono text-2xl text-success">${totalEquity.toLocaleString()}</p>
               </motion.div>
               <motion.div 
-                variants={scaleIn}
-                className="p-6 border border-border cursor-pointer hover:bg-secondary transition-colors"
+                className="p-6 border border-border/30 bg-secondary/20 cursor-pointer"
                 onClick={() => setShowLevelModal(true)}
+                whileHover={{ backgroundColor: 'rgba(39, 39, 42, 0.3)' }}
               >
-                <p className="text-xs tracking-[0.2em] text-muted-foreground uppercase mb-2">{t('level')}</p>
-                <p className="font-mono text-2xl">{getCurrentLevel(exp, lang)}</p>
+                <p className="text-xs tracking-[0.2em] text-muted-foreground uppercase mb-2">Level</p>
+                <p className="font-mono text-2xl">{getCurrentLevel(exp)}</p>
               </motion.div>
             </motion.div>
 
@@ -1071,15 +891,15 @@ export default function Home() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
             >
-              <p className="text-xs tracking-[0.3em] text-muted-foreground uppercase mb-4 text-center">{t('portfolio')}</p>
-              <div className="flex h-1 w-full overflow-hidden bg-secondary">
+              <p className="text-xs tracking-[0.3em] text-muted-foreground uppercase mb-4 text-center">Portfolio</p>
+              <div className="flex h-1 w-full overflow-hidden bg-secondary/50 rounded-full">
                 {prices.map(a => {
                   const qty = shares[a.id] || 0;
                   const weight = totalEquity > 0 ? (qty * a.price) / totalEquity * 100 : 0;
                   return (
                     <motion.div 
                       key={a.id} 
-                      className="h-full bg-primary"
+                      className="h-full bg-accent"
                       initial={{ width: 0 }}
                       animate={{ width: `${weight}%` }}
                       transition={{ duration: 0.8 }}
@@ -1089,7 +909,7 @@ export default function Home() {
                 })}
               </div>
               {totalEquity === 0 && (
-                <p className="text-xs text-center mt-4 text-muted-foreground">{t('noPosition')}</p>
+                <p className="text-xs text-center mt-4 text-muted-foreground">No positions yet</p>
               )}
             </motion.div>
 
@@ -1101,12 +921,12 @@ export default function Home() {
               transition={{ delay: 0.6 }}
             >
               <div className="flex justify-between items-center mb-2">
-                <p className="text-xs tracking-[0.2em] text-muted-foreground uppercase">{t('nextReward')}</p>
+                <p className="text-xs tracking-[0.2em] text-muted-foreground uppercase">Next Reward</p>
                 <p className="text-xs text-muted-foreground">{currentProgress}%</p>
               </div>
-              <div className="h-1 w-full bg-secondary overflow-hidden">
+              <div className="h-1 w-full bg-secondary/50 overflow-hidden rounded-full">
                 <motion.div 
-                  className="h-full bg-primary"
+                  className="h-full bg-accent"
                   initial={{ width: 0 }}
                   animate={{ width: `${currentProgress}%` }}
                   transition={{ duration: 0.5 }}
@@ -1121,7 +941,7 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 className="mb-12"
               >
-                <p className="text-xs tracking-[0.3em] text-muted-foreground uppercase mb-6 text-center">{t('foodGallery')}</p>
+                <p className="text-xs tracking-[0.3em] text-muted-foreground uppercase mb-6 text-center">Food Gallery</p>
                 <div className="grid grid-cols-4 gap-4">
                   {unlockedFoods.slice(0, 8).map((food, idx) => (
                     <motion.div 
@@ -1129,10 +949,10 @@ export default function Home() {
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: idx * 0.1 }}
-                      className="aspect-square border border-border flex flex-col items-center justify-center p-4 hover:bg-secondary transition-colors"
+                      className="aspect-square border border-border/30 flex flex-col items-center justify-center p-4 hover:bg-secondary/30 transition-colors"
                       title={food.desc}
                     >
-                      <span className="font-mono text-2xl mb-2">{food.icon}</span>
+                      <span className="font-mono text-2xl mb-2 text-accent">{food.icon}</span>
                       <span className="text-xs tracking-wider">{food.name}</span>
                     </motion.div>
                   ))}
@@ -1144,25 +964,25 @@ export default function Home() {
 
         {/* Right Sidebar - News */}
         <motion.aside 
-          className="w-96 border-l border-border p-6 overflow-y-auto fixed right-0 top-20 bottom-0 bg-background"
-          initial={{ opacity: 0, x: 40 }}
-          animate={{ opacity: 1, x: 0 }}
+          className="w-96 border-l border-border/30 p-6 overflow-y-auto fixed right-0 top-16 bottom-0 bg-background"
+          initial={{ x: 100, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.3 }}
         >
           <div className="mb-8">
             <input
               type="text"
-              placeholder={t('searchNews')}
+              placeholder="Search news..."
               value={newsSearchTerm}
               onChange={(e) => setNewsSearchTerm(e.target.value)}
-              className="w-full px-4 py-3 text-sm bg-transparent border-b border-border focus:border-primary outline-none transition-colors placeholder:text-muted-foreground"
+              className="w-full px-4 py-3 text-sm bg-transparent border-b border-border/50 focus:border-accent outline-none transition-colors placeholder:text-muted-foreground"
             />
           </div>
           
-          <p className="text-xs tracking-[0.3em] text-muted-foreground mb-6 uppercase">{t('intelligence')}</p>
+          <p className="text-xs tracking-[0.3em] text-muted-foreground mb-6 uppercase">Intelligence</p>
           
           <div className="space-y-0">
-            {paginatedNews.map((n, index) => (
+            {paginatedNews.map((n) => (
               <HoverRevealItem
                 key={n.id}
                 onClick={() => setSelectedNews(n)}
@@ -1173,11 +993,11 @@ export default function Home() {
                     n.impact === 'positive' ? 'text-success' : 
                     n.impact === 'warning' ? 'text-danger' : 'text-muted-foreground'
                   }`}>
-                    {lang === 'zh' ? n.tag : n.tagEn}
+                    {n.tag}
                   </span>
-                  <span className="text-[10px] text-muted-foreground">{n.sourceEn}</span>
+                  <span className="text-[10px] text-muted-foreground">{n.source}</span>
                 </div>
-                <h4 className="text-sm font-light leading-relaxed">{lang === 'zh' ? n.title : n.titleEn}</h4>
+                <h4 className="text-sm font-light leading-relaxed">{n.title}</h4>
               </HoverRevealItem>
             ))}
             <div ref={loadMoreRef} className="h-10 flex justify-center items-center">
@@ -1202,17 +1022,17 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-background/90 backdrop-blur-sm flex items-center justify-center z-50"
+            className="fixed inset-0 bg-background/95 backdrop-blur-sm flex items-center justify-center z-50"
             onClick={() => setShowLevelModal(false)}
           >
             <motion.div 
               initial={{ opacity: 0, y: 40, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 40, scale: 0.95 }}
-              className="bg-background border border-border p-8 max-w-md w-full"
+              className="bg-background border border-border/30 p-8 max-w-md w-full"
               onClick={e => e.stopPropagation()}
             >
-              <h2 className="text-2xl font-light mb-8">{t('levelTitle')}</h2>
+              <h2 className="text-2xl font-light mb-8">Investment Levels</h2>
               <div className="space-y-4">
                 {LEVELS.map((level, idx) => {
                   const isCurrent = exp >= level.threshold && (idx === LEVELS.length - 1 || exp < LEVELS[idx + 1].threshold);
@@ -1223,13 +1043,13 @@ export default function Home() {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: isLocked ? 0.4 : 1, x: 0 }}
                       transition={{ delay: idx * 0.1 }}
-                      className={`p-4 border ${isCurrent ? 'border-primary bg-secondary' : 'border-border'}`}
+                      className={`p-4 border ${isCurrent ? 'border-accent bg-secondary/30' : 'border-border/30'}`}
                     >
                       <div className="flex justify-between items-center">
-                        <h3 className="font-mono">{lang === 'zh' ? level.zh : level.en}</h3>
-                        <span className="text-xs text-muted-foreground">{level.threshold} {t('expRequired')}</span>
+                        <h3 className="font-mono">{level.name}</h3>
+                        <span className="text-xs text-muted-foreground">{level.threshold} EXP</span>
                       </div>
-                      {isCurrent && <p className="text-xs text-primary mt-2">{t('currentLevel')}</p>}
+                      {isCurrent && <p className="text-xs text-accent mt-2">Current Level</p>}
                     </motion.div>
                   );
                 })}
@@ -1248,23 +1068,23 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-background/90 backdrop-blur-sm flex items-center justify-center z-50"
+            className="fixed inset-0 bg-background/95 backdrop-blur-sm flex items-center justify-center z-50"
             onClick={() => setShowPaymentModal(false)}
           >
             <motion.div 
               initial={{ opacity: 0, y: 40, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 40, scale: 0.95 }}
-              className="bg-background border border-border p-8 max-w-md w-full"
+              className="bg-background border border-border/30 p-8 max-w-md w-full"
               onClick={e => e.stopPropagation()}
             >
-              <h2 className="text-2xl font-light mb-8">{t('selectDrink')}</h2>
+              <h2 className="text-2xl font-light mb-8">Select Drink</h2>
               <div className="space-y-3 mb-8">
                 {Object.entries(drinkNames).map(([key, name]) => (
                   <label 
                     key={key} 
                     className={`flex items-center p-4 border cursor-pointer transition-colors ${
-                      selectedDrink === key ? 'border-primary bg-secondary' : 'border-border hover:border-muted-foreground'
+                      selectedDrink === key ? 'border-accent bg-secondary/30' : 'border-border/30 hover:border-muted-foreground'
                     }`}
                   >
                     <input 
@@ -1276,19 +1096,19 @@ export default function Home() {
                       className="sr-only" 
                     />
                     <span className="flex-1">{name}</span>
-                    <span className="font-mono">${drinkPrices[key as keyof typeof drinkPrices]}</span>
+                    <span className="font-mono text-accent">${drinkPrices[key as keyof typeof drinkPrices]}</span>
                   </label>
                 ))}
               </div>
               <div className="mb-8">
-                <p className="text-xs tracking-[0.2em] text-muted-foreground uppercase mb-4">{t('paymentMethod')}</p>
+                <p className="text-xs tracking-[0.2em] text-muted-foreground uppercase mb-4">Payment Method</p>
                 <div className="flex gap-2">
                   {(['wechat', 'alipay', 'visa'] as const).map(method => (
                     <button 
                       key={method}
                       onClick={() => setPaymentMethod(method)} 
                       className={`flex-1 py-3 border text-xs uppercase tracking-wider transition-colors ${
-                        paymentMethod === method ? 'border-primary bg-secondary' : 'border-border'
+                        paymentMethod === method ? 'border-accent bg-secondary/30' : 'border-border/30'
                       }`}
                     >
                       {method}
@@ -1297,7 +1117,7 @@ export default function Home() {
                 </div>
               </div>
               <MagneticButton onClick={handlePayment} className="w-full">
-                {t('pay')}
+                Pay Now
               </MagneticButton>
               <button 
                 onClick={() => setShowPaymentModal(false)} 
@@ -1316,29 +1136,29 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-background/90 backdrop-blur-sm flex items-center justify-center z-50"
+            className="fixed inset-0 bg-background/95 backdrop-blur-sm flex items-center justify-center z-50"
             onClick={() => setShowHistoryModal(false)}
           >
             <motion.div 
               initial={{ opacity: 0, y: 40, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 40, scale: 0.95 }}
-              className="bg-background border border-border p-8 max-w-3xl w-full max-h-[80vh] overflow-y-auto"
+              className="bg-background border border-border/30 p-8 max-w-3xl w-full max-h-[80vh] overflow-y-auto"
               onClick={e => e.stopPropagation()}
             >
-              <h2 className="text-2xl font-light mb-8">{t('tradeHistory')}</h2>
+              <h2 className="text-2xl font-light mb-8">Trade History</h2>
               {tradeHistory.length === 0 ? (
-                <p className="text-center text-muted-foreground py-12">{t('noHistory')}</p>
+                <p className="text-center text-muted-foreground py-12">No trades yet</p>
               ) : (
                 <table className="w-full text-sm">
-                  <thead className="border-b border-border">
+                  <thead className="border-b border-border/30">
                     <tr className="text-xs tracking-wider text-muted-foreground uppercase">
-                      <th className="text-left py-4">{t('time')}</th>
-                      <th className="text-left">{t('symbol')}</th>
-                      <th className="text-left">{t('direction')}</th>
-                      <th className="text-right">{t('priceUnit')}</th>
-                      <th className="text-right">{t('qtyUnit')}</th>
-                      <th className="text-right">{t('totalAmount')}</th>
+                      <th className="text-left py-4">Time</th>
+                      <th className="text-left">Symbol</th>
+                      <th className="text-left">Direction</th>
+                      <th className="text-right">Price</th>
+                      <th className="text-right">Qty</th>
+                      <th className="text-right">Total</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1348,12 +1168,12 @@ export default function Home() {
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: idx * 0.05 }}
-                        className="border-b border-border last:border-0"
+                        className="border-b border-border/30 last:border-0"
                       >
                         <td className="py-4 text-muted-foreground">{record.dateStr}</td>
                         <td className="font-mono">{record.symbol}</td>
                         <td className={record.direction === 'buy' ? 'text-success' : 'text-danger'}>
-                          {t(record.direction === 'buy' ? 'buyDirection' : 'sellDirection')}
+                          {record.direction === 'buy' ? 'Buy' : 'Sell'}
                         </td>
                         <td className="text-right font-mono">${record.price.toFixed(2)}</td>
                         <td className="text-right font-mono">{record.quantity}</td>
@@ -1377,14 +1197,14 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-background/90 backdrop-blur-sm flex items-center justify-center z-50"
+            className="fixed inset-0 bg-background/95 backdrop-blur-sm flex items-center justify-center z-50"
             onClick={() => setSelectedNews(null)}
           >
             <motion.div 
               initial={{ opacity: 0, y: 40, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 40, scale: 0.95 }}
-              className="bg-background border border-border p-8 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+              className="bg-background border border-border/30 p-8 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
               onClick={e => e.stopPropagation()}
             >
               <div className="flex gap-4 text-xs text-muted-foreground mb-4">
@@ -1392,29 +1212,29 @@ export default function Home() {
                   selectedNews.impact === 'positive' ? 'text-success' : 
                   selectedNews.impact === 'warning' ? 'text-danger' : ''
                 }`}>
-                  {lang === 'zh' ? selectedNews.tag : selectedNews.tagEn}
+                  {selectedNews.tag}
                 </span>
-                <span>{selectedNews.sourceEn}</span>
+                <span>{selectedNews.source}</span>
                 <span>{selectedNews.date}</span>
               </div>
               <h2 className="text-3xl font-light mb-6 leading-tight">
-                {lang === 'zh' ? selectedNews.title : selectedNews.titleEn}
+                {selectedNews.title}
               </h2>
               {selectedNews.imageUrl && (
                 <motion.img 
                   src={selectedNews.imageUrl} 
                   alt="" 
-                  className="w-full h-64 object-cover mb-6 grayscale hover:grayscale-0 transition-all duration-500"
+                  className="w-full h-64 object-cover mb-6"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.2 }}
                 />
               )}
               <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-line">
-                {lang === 'zh' ? selectedNews.fullContent : selectedNews.fullContentEn}
+                {selectedNews.fullContent}
               </p>
               <MagneticButton onClick={() => setSelectedNews(null)} variant="outline" className="w-full mt-8">
-                {t('backToList')}
+                Back
               </MagneticButton>
             </motion.div>
           </motion.div>
@@ -1423,6 +1243,327 @@ export default function Home() {
     </div>
   );
 
+  // Home Page with Hero
+  const renderHome = () => (
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
+      {/* Fixed Header */}
+      <motion.header 
+        style={{ backgroundColor: headerBg }}
+        className="fixed top-0 left-0 right-0 h-20 flex items-center justify-between px-8 md:px-16 z-50 backdrop-blur-sm"
+      >
+        <motion.div 
+          className="flex items-center gap-4"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          <div className="w-10 h-10 bg-accent flex items-center justify-center">
+            <span className="text-accent-foreground font-mono text-sm font-bold">BL</span>
+          </div>
+          <span className="text-sm tracking-[0.4em] uppercase font-light hidden md:block">Banliang</span>
+        </motion.div>
+
+        <motion.nav 
+          className="flex items-center gap-8"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          <button onClick={() => scrollTo('markets')} className="text-xs tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors">
+            Markets
+          </button>
+          <button onClick={() => scrollTo('about')} className="text-xs tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors">
+            About
+          </button>
+          {user ? (
+            <span className="text-xs tracking-wider text-accent">{user.username}</span>
+          ) : (
+            <MagneticButton onClick={() => setCurrentPage('login')} variant="outline">
+              Login
+            </MagneticButton>
+          )}
+        </motion.nav>
+      </motion.header>
+
+      {/* Hero Section */}
+      <section className="relative h-screen flex items-center justify-center overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0">
+          <motion.div 
+            className="absolute inset-0 bg-gradient-to-b from-background via-background/50 to-background z-10"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1.5 }}
+          />
+          <motion.img
+            src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1920&q=80"
+            alt="Financial Trading"
+            className="w-full h-full object-cover opacity-30"
+            initial={{ scale: 1.1 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 2, ease: [0.25, 0.46, 0.45, 0.94] }}
+          />
+        </div>
+
+        {/* Hero Content */}
+        <div className="relative z-20 text-center px-8 max-w-6xl mx-auto">
+          <motion.p
+            className="text-xs tracking-[0.5em] uppercase text-muted-foreground mb-8"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            Global Trading Simulator
+          </motion.p>
+          
+          <motion.h1 
+            className="text-5xl md:text-8xl lg:text-9xl font-light tracking-tight mb-8 leading-none"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.4 }}
+          >
+            <span className="block">Trade</span>
+            <span className="block text-accent italic font-serif">Without</span>
+            <span className="block">Limits</span>
+          </motion.h1>
+
+          <motion.p
+            className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-12 font-light leading-relaxed"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+          >
+            Experience the thrill of global markets with zero risk. 
+            Practice your strategies and master the art of trading.
+          </motion.p>
+
+          <motion.div
+            className="flex flex-col sm:flex-row items-center justify-center gap-4"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.8 }}
+          >
+            <MagneticButton onClick={() => setCurrentPage('trading')} className="min-w-[200px]">
+              Start Trading
+            </MagneticButton>
+            <MagneticButton onClick={() => scrollTo('markets')} variant="outline" className="min-w-[200px]">
+              View Markets
+            </MagneticButton>
+          </motion.div>
+        </div>
+
+        {/* Scroll Indicator */}
+        <motion.div 
+          className="absolute bottom-12 left-1/2 -translate-x-1/2"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.5 }}
+        >
+          <motion.div
+            animate={{ y: [0, 10, 0] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="flex flex-col items-center gap-2 cursor-pointer"
+            onClick={() => scrollTo('markets')}
+          >
+            <span className="text-xs tracking-widest uppercase text-muted-foreground">Scroll</span>
+            <div className="w-px h-12 bg-gradient-to-b from-muted-foreground to-transparent" />
+          </motion.div>
+        </motion.div>
+      </section>
+
+      {/* Marquee Section */}
+      <section className="py-8 border-y border-border/30 overflow-hidden bg-secondary/20">
+        <div className="overflow-hidden">
+          <ParallaxText baseVelocity={3}>
+            <span className="text-5xl md:text-7xl font-light tracking-tight text-foreground/10">
+              SPY +0.45% &nbsp; QQQ +0.82% &nbsp; AAPL +1.2% &nbsp; MSFT +0.67% &nbsp; GOOGL +0.34% &nbsp; TSLA -0.91%
+            </span>
+          </ParallaxText>
+        </div>
+      </section>
+
+      {/* Markets Section */}
+      <section id="markets" className="py-32 px-8 md:px-16">
+        <div className="max-w-7xl mx-auto">
+          <RevealSection>
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-16">
+              <div>
+                <p className="text-xs tracking-[0.3em] uppercase text-muted-foreground mb-4">Live Markets</p>
+                <h2 className="text-4xl md:text-6xl font-light tracking-tight">
+                  Global<br />
+                  <span className="text-accent italic font-serif">Opportunities</span>
+                </h2>
+              </div>
+              <p className="text-muted-foreground max-w-md mt-8 md:mt-0 text-sm leading-relaxed">
+                Access markets across North America, Europe, and Asia. 
+                Real-time data, professional tools, zero commission simulation.
+              </p>
+            </div>
+          </RevealSection>
+
+          {/* Market Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* NA Markets */}
+            <RevealSection className="border border-border/30 p-8 bg-secondary/10">
+              <p className="text-xs tracking-[0.3em] uppercase text-muted-foreground mb-6">North America</p>
+              <div className="space-y-4">
+                {prices.filter(a => a.zone === 'NA').slice(0, 4).map(a => (
+                  <div key={a.id} className="flex justify-between items-center py-3 border-b border-border/20 last:border-0">
+                    <div>
+                      <span className="font-mono text-sm">{a.id}</span>
+                      <span className="text-xs text-muted-foreground ml-2">{a.name}</span>
+                    </div>
+                    <span className="font-mono text-accent">${a.price.toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            </RevealSection>
+
+            {/* EU Markets */}
+            <RevealSection className="border border-border/30 p-8 bg-secondary/10">
+              <p className="text-xs tracking-[0.3em] uppercase text-muted-foreground mb-6">Europe</p>
+              <div className="space-y-4">
+                {prices.filter(a => a.zone === 'EU').map(a => (
+                  <div key={a.id} className="flex justify-between items-center py-3 border-b border-border/20 last:border-0">
+                    <div>
+                      <span className="font-mono text-sm">{a.id}</span>
+                      <span className="text-xs text-muted-foreground ml-2">{a.name}</span>
+                    </div>
+                    <span className="font-mono text-accent">${a.price.toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            </RevealSection>
+
+            {/* Asia Markets */}
+            <RevealSection className="border border-border/30 p-8 bg-secondary/10">
+              <p className="text-xs tracking-[0.3em] uppercase text-muted-foreground mb-6">Asia Pacific</p>
+              <div className="space-y-4">
+                {prices.filter(a => a.zone === 'ASIA').slice(0, 4).map(a => (
+                  <div key={a.id} className="flex justify-between items-center py-3 border-b border-border/20 last:border-0">
+                    <div>
+                      <span className="font-mono text-sm">{a.id}</span>
+                      <span className="text-xs text-muted-foreground ml-2">{a.name}</span>
+                    </div>
+                    <span className="font-mono text-accent">${a.price.toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            </RevealSection>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-32 px-8 md:px-16 bg-secondary/20 border-y border-border/30">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <RevealSection className="text-center">
+              <p className="text-5xl md:text-7xl font-light text-accent mb-4">
+                <AnimatedCounter value={15} suffix="+" />
+              </p>
+              <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground">Global Markets</p>
+            </RevealSection>
+            <RevealSection className="text-center">
+              <p className="text-5xl md:text-7xl font-light text-accent mb-4">
+                <AnimatedCounter value={1} prefix="$" suffix="M" />
+              </p>
+              <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground">Starting Capital</p>
+            </RevealSection>
+            <RevealSection className="text-center">
+              <p className="text-5xl md:text-7xl font-light text-accent mb-4">
+                <AnimatedCounter value={0} prefix="$" />
+              </p>
+              <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground">Real Risk</p>
+            </RevealSection>
+            <RevealSection className="text-center">
+              <p className="text-5xl md:text-7xl font-light text-accent mb-4">
+                <AnimatedCounter value={24} suffix="/7" />
+              </p>
+              <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground">Market Access</p>
+            </RevealSection>
+          </div>
+        </div>
+      </section>
+
+      {/* About Section */}
+      <section id="about" className="py-32 px-8 md:px-16">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <RevealSection>
+              <p className="text-xs tracking-[0.3em] uppercase text-muted-foreground mb-4">About Banliang</p>
+              <h2 className="text-4xl md:text-5xl font-light tracking-tight mb-8 leading-tight">
+                Master the markets<br />
+                <span className="text-accent italic font-serif">before risking a cent</span>
+              </h2>
+              <p className="text-muted-foreground leading-relaxed mb-8">
+                Banliang is a sophisticated trading simulator designed for aspiring traders 
+                who want to learn the art of market analysis and execution. With real-time 
+                data, professional charting tools, and a gamified progression system, 
+                you can develop your skills in a risk-free environment.
+              </p>
+              <MagneticButton onClick={() => setCurrentPage('trading')}>
+                Enter Platform
+              </MagneticButton>
+            </RevealSection>
+
+            <RevealSection>
+              <div className="relative aspect-square">
+                <motion.img
+                  src="https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=800&q=80"
+                  alt="Trading"
+                  className="w-full h-full object-cover"
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ duration: 0.6 }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
+              </div>
+            </RevealSection>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-32 px-8 md:px-16 bg-accent text-accent-foreground">
+        <div className="max-w-4xl mx-auto text-center">
+          <RevealSection>
+            <h2 className="text-4xl md:text-6xl font-light tracking-tight mb-8">
+              Ready to trade?
+            </h2>
+            <p className="text-lg text-accent-foreground/70 mb-12 max-w-2xl mx-auto">
+              Join thousands of traders practicing their strategies on Banliang. 
+              Start with $1,000,000 in virtual capital.
+            </p>
+            <motion.button
+              onClick={() => setCurrentPage('trading')}
+              className="px-12 py-5 bg-background text-foreground text-sm tracking-wider uppercase font-medium hover:bg-secondary transition-colors"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Launch Platform
+            </motion.button>
+          </RevealSection>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-16 px-8 md:px-16 border-t border-border/30">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="flex items-center gap-4">
+            <div className="w-8 h-8 bg-accent flex items-center justify-center">
+              <span className="text-accent-foreground font-mono text-xs font-bold">BL</span>
+            </div>
+            <span className="text-sm tracking-[0.3em] uppercase font-light">Banliang</span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            &copy; 2024 Banliang Trading Simulator. Educational purposes only.
+          </p>
+        </div>
+      </footer>
+    </div>
+  );
+
   if (currentPage === 'login') return renderLoginPage();
+  if (currentPage === 'trading') return renderTradingPage();
   return renderHome();
 }
